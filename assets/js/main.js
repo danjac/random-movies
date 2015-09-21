@@ -1,3 +1,5 @@
+var m = require('mithril');
+
 var components = require('./components'),
     Page = components.Page,
     MovieComponent = components.MovieComponent,

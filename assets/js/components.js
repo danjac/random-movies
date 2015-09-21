@@ -1,3 +1,5 @@
+var m = require('mithril');
+
 var Movie = require('./model').Movie;
 
 function Page(main) {

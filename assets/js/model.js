@@ -1,3 +1,5 @@
+var m = require('mithril');
+
 module.exports = {
   Movie: {
     getRandom: function() {
