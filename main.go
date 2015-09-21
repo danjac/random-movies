@@ -29,6 +29,8 @@ var titles = []string{
 	"Transporter 2",
 }
 
+var titlesMap = make(map[string]bool)
+
 var cache = make(map[string]*Movie)
 
 func getMovieFromOMDB(title string) (*Movie, error) {
@@ -59,8 +61,10 @@ func getMovieFromOMDB(title string) (*Movie, error) {
 	return movie, nil
 }
 
-func getMovie() (*Movie, error) {
-	title := titles[rand.Intn(len(titles))]
+func getMovie(title string) (*Movie, error) {
+	if title == "" {
+		title = titles[rand.Intn(len(titles))]
+	}
 	cached, ok := cache[title]
 	if ok {
 		return cached, nil
@@ -73,20 +77,37 @@ func getMovie() (*Movie, error) {
 	return movie, nil
 }
 
+func indexPage(c *gin.Context) {
+	c.HTML(http.StatusOK, "index.html", gin.H{})
+}
+
 func main() {
+
+	for _, title := range titles {
+		titlesMap[title] = true
+	}
+
 	r := gin.Default()
 
-	r.Use(static.Serve("/", static.LocalFile("static", true)))
+	r.Use(static.Serve("/static", static.LocalFile("static", true)))
+	r.LoadHTMLGlob("templates/*")
+
+	r.GET("/", indexPage)
 
 	api := r.Group("/api/")
 
 	api.GET("/", func(c *gin.Context) {
-		movie, err := getMovie()
+		title := c.Query("title")
+		movie, err := getMovie(title)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 		c.JSON(http.StatusOK, movie)
+	})
+
+	api.GET("/titles", func(c *gin.Context) {
+		c.JSON(http.StatusOK, titles)
 	})
 
 	api.POST("/", func(c *gin.Context) {
@@ -105,7 +126,11 @@ func main() {
 			return
 		}
 		if movie.Title != "" {
-			titles = append(titles, s.Title)
+			ok, _ := titlesMap[movie.Title]
+			if !ok {
+				titles = append(titles, movie.Title)
+				titlesMap[movie.Title] = true
+			}
 			cache[s.Title] = movie
 		}
 		c.JSON(http.StatusOK, movie)
