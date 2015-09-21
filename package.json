@@ -3,5 +3,19 @@
   "version": "0.0.1",
   "description": "",
   "author": "Dan Jacob",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "bootstrap": "^3.3.5",
+    "jquery": "^2.1.4",
+    "mithril": "^0.2.0"
+  },
+  "devDependencies": {
+    "browserify": "^11.1.0",
+    "uglifyjs": "^2.4.10"
+  },
+  "scripts": {
+    "build:deps": "cp -r node_modules/bootstrap/dist/* static && cp node_modules/mithril/mithril.min.js static/js && cp node_modules/jquery/dist/jquery.min.js static/js",
+    "build:js": "browserify assets/js/main.js | uglifyjs -o static/js/main.js",
+    "build": "npm run build:deps && npm run build:js"
+  }
 }
