@@ -2,13 +2,14 @@ var m = require('mithril');
 
 var components = require('./components'),
     Movie = components.Movie,
-    Titles = components.Titles;
+    MovieList = components.MovieList;
 
 m.route.mode = "hash";
 
 m.route(document.body, "/", {
    "/": Movie,
-   "/titles": Titles
+   "/titles": MovieList,
+   "/movie/:id": Movie
 });
 
 

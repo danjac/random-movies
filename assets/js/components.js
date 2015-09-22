@@ -12,8 +12,8 @@ function pageController(main) {
     var title = newTitle().trim();
     if (title) {
       newTitle("");
-      Movie.addNew(title).then(function() {
-        m.route("/", { title: title });
+      Movie.addNew(title).then(function(movie) {
+        m.route("/movie/" + movie.imdbID);
       });
     }
   }
@@ -57,28 +57,34 @@ function Page(main) {
 
 }
 
-var TitlesComponent = {
+function getInitial(title) {
+    if (title.match(/$the\s/i)) {
+      title = title.substring(4);
+    }
+    var upCase = title.charAt(0).toUpperCase();
+    if (upCase.toLowerCase() !== upCase) { // ASCII letter
+      return upCase;
+    }
+    return '-';
+}
+
+var ListComponent = {
   controller: function() {
-    var titles = m.prop([]);
+    var movies = m.prop([]);
     Movie.getList().then(function(result) {
-      result.sort();
-      titles(result);
+      result.sort(function(left, right) {
+        return left.Title > right.Title ? 1 : (left.Title < right.Title ? -1 : 0);
+      });
+      movies(result);
     });
     return {
-      titles: titles
+      movies: movies
     };
   },
   view: function(ctrl) {
 
-    var groups = _.groupBy(ctrl.titles(), function(title) {
-      if (title.match(/the\s/i)) {
-        title = title.substring(4);
-      }
-      var upCase = title.charAt(0).toUpperCase();
-      if (upCase.toLowerCase() !== upCase) { // ASCII letter
-        return upCase;
-      }
-      return '-';
+    var groups = _.groupBy(ctrl.movies(), function(movie) {
+      return getInitial(movie.Title);
     });
     var initials = Object.keys(groups);
     initials.sort();
@@ -87,8 +93,8 @@ var TitlesComponent = {
       return m("div.col-md-3", chunk.map(function(initial) {
         return [
           m("h3", initial),
-          m("ul.list-unstyled", groups[initial].map(function(title) {
-            return m("li", m("a", {href: "#/?title=" + title}, title));
+          m("ul.list-unstyled", groups[initial].map(function(movie) {
+              return m("li", m("a", {href: "#/movie/" + movie.imdbID}, movie.Title));
           }))
         ];
       }));
@@ -108,10 +114,10 @@ var MovieComponent = {
       Movie.getRandom().then(movie);
     }
 
-    var title = m.route.param("title");
+    var imdbID = m.route.param("id");
 
-    if (title) {
-      Movie.getMovie(title).then(movie);
+    if (imdbID) {
+      Movie.getMovie(imdbID).then(movie);
     } else {
       Movie.getRandom().then(movie);
     }
@@ -167,7 +173,7 @@ var MovieComponent = {
 };
 
 module.exports = {
-  Titles: Page(TitlesComponent),
+  MovieList: Page(ListComponent),
   Movie: Page(MovieComponent)
 };
 

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
+	"gopkg.in/redis.v3"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"net/url"
 )
@@ -20,18 +20,17 @@ type Movie struct {
 	ImdbID   string `json:"imdbID"`
 }
 
-var titles = []string{
-	"The Man from UNCLE",
-	"Tinker, Tailor, Soldier, Spy",
-	"Casino Royale",
-	"Jack Reacher",
-	"Mission Impossible Rogue Nation",
-	"Transporter 2",
+func (m *Movie) MarshalBinary() ([]byte, error) {
+	return json.Marshal(m)
 }
 
-var titlesMap = make(map[string]bool)
+func (m *Movie) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, m)
+}
 
-var cache = make(map[string]*Movie)
+func (m *Movie) Save(db *redis.Client) error {
+	return db.Set(m.ImdbID, m, 0).Err()
+}
 
 func getMovieFromOMDB(title string) (*Movie, error) {
 
@@ -61,20 +60,39 @@ func getMovieFromOMDB(title string) (*Movie, error) {
 	return movie, nil
 }
 
-func getMovie(title string) (*Movie, error) {
-	if title == "" {
-		title = titles[rand.Intn(len(titles))]
-	}
-	cached, ok := cache[title]
-	if ok {
-		return cached, nil
-	}
-	movie, err := getMovieFromOMDB(title)
+func getRandomMovie(db *redis.Client) (*Movie, error) {
+	imdbID, err := db.RandomKey().Result()
 	if err != nil {
 		return nil, err
 	}
-	cache[title] = movie
+	return getMovie(db, imdbID)
+}
+
+func getMovie(db *redis.Client, imdbID string) (*Movie, error) {
+	movie := &Movie{}
+	if err := db.Get(imdbID).Scan(movie); err != nil {
+		if err == redis.Nil {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
 	return movie, nil
+}
+
+func getMovies(db *redis.Client) ([]*Movie, error) {
+	result := db.Keys("*")
+	if err := result.Err(); err != nil {
+		return nil, err
+	}
+	var movies []*Movie
+	for _, imdbID := range result.Val() {
+		movie := &Movie{}
+		if err := db.Get(imdbID).Scan(movie); err == nil {
+			movies = append(movies, movie)
+		}
+	}
+	return movies, nil
 }
 
 func indexPage(c *gin.Context) {
@@ -83,8 +101,15 @@ func indexPage(c *gin.Context) {
 
 func main() {
 
-	for _, title := range titles {
-		titlesMap[title] = true
+	db := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+
+	_, err := db.Ping().Result()
+	if err != nil {
+		panic(err)
 	}
 
 	r := gin.Default()
@@ -97,8 +122,7 @@ func main() {
 	api := r.Group("/api/")
 
 	api.GET("/", func(c *gin.Context) {
-		title := c.Query("title")
-		movie, err := getMovie(title)
+		movie, err := getRandomMovie(db)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
@@ -106,8 +130,26 @@ func main() {
 		c.JSON(http.StatusOK, movie)
 	})
 
-	api.GET("/titles", func(c *gin.Context) {
-		c.JSON(http.StatusOK, titles)
+	api.GET("/movie/:id", func(c *gin.Context) {
+		movie, err := getMovie(db, c.Param("id"))
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		if movie == nil {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		c.JSON(http.StatusOK, movie)
+	})
+
+	api.GET("/all", func(c *gin.Context) {
+		movies, err := getMovies(db)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		c.JSON(http.StatusOK, movies)
 	})
 
 	api.POST("/", func(c *gin.Context) {
@@ -126,12 +168,10 @@ func main() {
 			return
 		}
 		if movie.Title != "" {
-			ok, _ := titlesMap[movie.Title]
-			if !ok {
-				titles = append(titles, movie.Title)
-				titlesMap[movie.Title] = true
+			if err := movie.Save(db); err != nil {
+				c.AbortWithError(http.StatusInternalServerError, err)
+				return
 			}
-			cache[s.Title] = movie
 		}
 		c.JSON(http.StatusOK, movie)
 	})
