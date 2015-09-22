@@ -15,6 +15,8 @@
     "uglifyjs": "^2.4.10"
   },
   "scripts": {
+    "livereload": "live-reload static/",
+    "watch:js": "watchify assets/js/main.js -o static/js/main.js --debug",
     "build:deps": "cp -r node_modules/bootstrap/dist/* static",
     "build:js": "browserify assets/js/main.js | uglifyjs -o static/js/main.js",
     "build": "npm run build:deps && npm run build:js"

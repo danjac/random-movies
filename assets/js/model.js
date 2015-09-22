@@ -13,7 +13,15 @@ module.exports = {
     },
     getList: function() {
       return m.request({ method: "GET", url: "/api/all/" });
+    },
+    deleteMovie: function(id) {
+        return m.request({
+          method: "DELETE",
+          url: "/api/movie/" + id,
+          deserialize: function(value) { return value; }
+        });
     }
+
 
   }
 };

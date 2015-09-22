@@ -143,6 +143,14 @@ func main() {
 		c.JSON(http.StatusOK, movie)
 	})
 
+	api.DELETE("/movie/:id", func(c *gin.Context) {
+		if err := db.Del(c.Param("id")).Err(); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		c.String(http.StatusOK, "Deleted")
+	})
+
 	api.GET("/all", func(c *gin.Context) {
 		movies, err := getMovies(db)
 		if err != nil {
