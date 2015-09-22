@@ -1,4 +1,5 @@
 var m = require('mithril');
+var _ = require('lodash');
 
 var Movie = require('./model').Movie;
 
@@ -68,10 +69,32 @@ var TitlesComponent = {
     };
   },
   view: function(ctrl) {
-    return m("ul.list-unstyled", ctrl.titles().map(function(title) {
-      return m("li", m("a", {href: "#/?title=" + title}, title));
+
+    var groups = _.groupBy(ctrl.titles(), function(title) {
+      if (title.match(/the\s/i)) {
+        title = title.substring(4);
+      }
+      var upCase = title.charAt(0).toUpperCase();
+      if (upCase.toLowerCase() !== upCase) { // ASCII letter
+        return upCase;
+      }
+      return '-';
+    });
+    var initials = Object.keys(groups);
+    initials.sort();
+
+    return m("div.row", _.chunk(initials, 4).map(function(chunk) {
+      return m("div.col-md-3", chunk.map(function(initial) {
+        return [
+          m("h3", initial),
+          m("ul.list-unstyled", groups[initial].map(function(title) {
+            return m("li", m("a", {href: "#/?title=" + title}, title));
+          }))
+        ];
       }));
+    }));
   }
+
 };
 
 var MovieComponent = {
