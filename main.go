@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/redis.v3"
@@ -95,11 +96,14 @@ func getMovies(db *redis.Client) ([]*Movie, error) {
 	return movies, nil
 }
 
-func indexPage(c *gin.Context) {
-	c.HTML(http.StatusOK, "index.html", gin.H{})
-}
+var (
+	env  = flag.String("env", "prod", "environment ('prod' or 'dev')")
+	port = flag.String("port", "4000", "server port")
+)
 
 func main() {
+
+	flag.Parse()
 
 	db := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
@@ -117,7 +121,9 @@ func main() {
 	r.Use(static.Serve("/static", static.LocalFile("static", true)))
 	r.LoadHTMLGlob("templates/*")
 
-	r.GET("/", indexPage)
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", gin.H{"env": *env})
+	})
 
 	api := r.Group("/api/")
 
@@ -184,7 +190,7 @@ func main() {
 		c.JSON(http.StatusOK, movie)
 	})
 
-	if err := r.Run(":4000"); err != nil {
+	if err := r.Run(":" + *port); err != nil {
 		panic(err)
 	}
 

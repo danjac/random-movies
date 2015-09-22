@@ -3,9 +3,8 @@ var _ = require('lodash');
 
 var Movie = require('../model').Movie;
 
-
 function getInitial(title) {
-    if (title.match(/$the\s/i)) {
+    if (title.match(/^the\s/i)) {
       title = title.substring(4);
     }
     var upCase = title.charAt(0).toUpperCase();
@@ -33,10 +32,7 @@ module.exports = {
     var groups = _.groupBy(ctrl.movies(), function(movie) {
       return getInitial(movie.Title);
     });
-    var initials = Object.keys(groups);
-    initials.sort();
-
-    return m("div.row", _.chunk(initials, 4).map(function(chunk) {
+    return m("div.row", _.chunk(_.sortBy(Object.keys(groups)), 4).map(function(chunk) {
       return m("div.col-md-3", chunk.map(function(initial) {
         return [
           m("h3", initial),
