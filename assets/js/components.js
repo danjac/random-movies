@@ -2,7 +2,7 @@ var m = require('mithril');
 
 var Movie = require('./model').Movie;
 
-function Page(main) {
+function pageController(main) {
 
   newTitle = m.prop("");
 
@@ -17,29 +17,41 @@ function Page(main) {
     }
   }
 
-  this.controller = function() {
+  return function() {
     return {
       addMovie: addMovie,
-      newTitle: newTitle
+      newTitle: newTitle,
+      main: main
     };
   };
 
-  this.view = function(ctrl) {
-      return m("div.container", [
-         m("h1", "Random movies"),
-         m("form.form-horizontal", {onsubmit: ctrl.addMovie}, [
-            m("div.form-group", [
-              m("input.form-control.form-control-bg", {
-                type: "text",
-                placeholder: "Add another title",
-                value: ctrl.newTitle(),
-                onchange: m.withAttr("value", ctrl.newTitle)
-              }),
-              m("button.form-control.btn.btn-primary[type=submit]", "Add")
-            ])
-         ]),
-         m.component(main)
-      ]);
+}
+
+
+function pageView(ctrl) {
+  return m("div.container", [
+     m("h1", "Random movies"),
+     m("form.form-horizontal", {onsubmit: ctrl.addMovie}, [
+        m("div.form-group", [
+          m("input.form-control.form-control-bg", {
+            type: "text",
+            placeholder: "Add another title",
+            value: ctrl.newTitle(),
+            onchange: m.withAttr("value", ctrl.newTitle)
+          }),
+          m("button.form-control.btn.btn-primary[type=submit]", "Add new")
+        ])
+     ]),
+     m.component(ctrl.main)
+  ]);
+}
+
+
+function Page(main) {
+
+  return {
+      controller: pageController(main),
+      view: pageView
   };
 
 }
@@ -74,6 +86,7 @@ var MovieComponent = {
     }
 
     var title = m.route.param("title");
+
     if (title) {
       Movie.getMovie(title).then(movie);
     } else {
@@ -103,39 +116,36 @@ var MovieComponent = {
       return m("a[target=_blank]", {href: imdbURL},  m("img.img-responsive", {src: movie.Poster}));
     }
 
-    function showMovie() {
-      if (!movie || !movie.Title || !movie.Poster) {
-        return showButtons();
-      }
-
-      return m("div.row", [
-        m("div.col-md-3", [
-          showPoster()
-        ]),
-        m("div.col-md-9", [
-          m("h2", m("a[target=_blank]", {href: imdbURL}, movie.Title)),
-          m("dl.dl-unstyled", [
-            m("dt", "Year"),
-            m("dd", movie.Year),
-            m("dt", "Actors"),
-            m("dd", movie.Actors),
-            m("dt", "Director"),
-            m("dd", movie.Director),
-          ]),
-          m("p.well", movie.Plot),
-          showButtons()
-        ])
-      ]);
+    if (!movie || !movie.Title || !movie.Poster) {
+      return showButtons();
     }
+
     var imdbURL = "http://www.imdb.com/title/" +  movie.imdbID + "/";
-    return showMovie();
+
+    return m("div.row", [
+      m("div.col-md-3", [
+        showPoster()
+      ]),
+      m("div.col-md-9", [
+        m("h2", m("a[target=_blank]", {href: imdbURL}, movie.Title)),
+        m("dl.dl-unstyled", [
+          m("dt", "Year"),
+          m("dd", movie.Year),
+          m("dt", "Actors"),
+          m("dd", movie.Actors),
+          m("dt", "Director"),
+          m("dd", movie.Director),
+        ]),
+        m("p.well", movie.Plot),
+        showButtons()
+      ])
+    ]);
   }
 };
 
 module.exports = {
-  Page: Page,
-  TitlesComponent: TitlesComponent,
-  MovieComponent: MovieComponent
-}
+  Titles: Page(TitlesComponent),
+  Movie: Page(MovieComponent)
+};
 
 
