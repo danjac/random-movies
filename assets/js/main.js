@@ -1,15 +1,28 @@
-var m = require('mithril');
+import React from 'react';
+import { Provider } from 'react-redux';
 
-var components = require('./components'),
-    Movie = components.Movie,
-    MovieList = components.MovieList;
+import configureStore from './store';
 
-m.route.mode = "hash";
-
-m.route(document.body, "/", {
-   "/": Movie,
-   "/titles": MovieList,
-   "/movie/:id": Movie
-});
+const store = configureStore();
 
 
+class Page extends React.Component {
+  render() {
+      return <div>OK</div>;
+  }
+}
+
+
+class Container extends React.Component {
+  render() {
+    return (
+    <div>
+    <Provider store={store}>
+      <Page />
+    </Provider>
+    </div>
+    );
+  }
+}
+
+React.render(<Container />, document.body);
