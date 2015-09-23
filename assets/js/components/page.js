@@ -52,12 +52,12 @@ function view(ctrl) {
 
   function showFlashMessage(alert, index) {
     // get around window timeout event issues: has to be better way
-    var dismissFlashMessage = ctrl.dismissFlashMessage.bind(ctrl, index);
-    window.setTimeout(dismissFlashMessage, 6000);
+    var dismissFlash = ctrl.dismissFlash.bind(ctrl, index);
+    window.setTimeout(dismissFlash, 6000);
 
-    return m("div.alert.alert-dismissable.alert-" + alert.level, {role: "alert"}, [
+    return m("div.alert.alert-dismissable.alert-" + alert.status, {role: "alert"}, [
         m("button.close[type=button][aria-label=Close][data-dismiss=alert]",  {
-          onclick: dismissFlashMessage
+          onclick: dismissFlash
         },
         m("span[aria-hidden=true]", m.trust("&times;"))),
         alert.msg
