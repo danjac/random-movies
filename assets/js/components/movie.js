@@ -20,7 +20,7 @@ module.exports = {
       var mv = movie();
       if (window.confirm("Are you sure you want to remove \"" + mv.Title + "\"?")) {
       Movie.deleteMovie(mv.imdbID).then(function() {
-          args.parent.makeAlert("info", "\"" + mv.Title + "\" has been deleted");
+          args.parent.flash("info", "\"" + mv.Title + "\" has been deleted");
           m.route("/titles/");
       });
       }

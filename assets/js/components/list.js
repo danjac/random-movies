@@ -29,19 +29,28 @@ module.exports = {
   },
   view: function(ctrl) {
 
-    var groups = _.groupBy(ctrl.movies(), function(movie) {
+    var movies = ctrl.movies();
+    var groups = _.groupBy(movies, function(movie) {
       return getInitial(movie.Title);
     });
-    return m("div.row", _.chunk(_.sortBy(Object.keys(groups)), 4).map(function(chunk) {
-      return m("div.col-md-3", chunk.map(function(initial) {
-        return [
-          m("h3", initial),
-          m("ul.list-unstyled", groups[initial].map(function(movie) {
-              return m("li", m("a", {href: "#/movie/" + movie.imdbID}, movie.Title));
-          }))
-        ];
-      }));
-    }));
+    var cols = _.chunk(_.sortBy(Object.keys(groups)), 4);
+    var rows = _.chunk(cols, 4);
+
+    return m("div.container", [
+      m("h3", "Total: " + movies.length),
+      rows.map(function(row) {
+        return m("div.row", row.map(function(col) {
+          return m("div.col-md-3", col.map(function(initial) {
+            return [
+              m("h3", initial),
+              m("ul.list-unstyled", groups[initial].map(function(movie) {
+                  return m("li", m("a", {href: "#/movie/" + movie.imdbID}, movie.Title));
+              }))
+            ];
+          }));
+        }));
+    })]);
+
   }
 
 };

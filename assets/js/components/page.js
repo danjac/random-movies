@@ -6,17 +6,15 @@ var buttonLabel = require('./widgets').buttonLabel;
 function controller(main) {
 
   newTitle = m.prop("");
-  alerts = m.prop([]);
+  flashMessages = m.prop([]);
 
-  function makeAlert(level, msg) {
-      alerts().push({ level: level, msg: msg });
+  flash(status, msg) {
+      flashMessages().push({ status: status, msg: msg });
   }
 
-  function dismissAlert(index, forceRedraw) {
-    alerts().splice(index, 1);
-    if (forceRedraw) {
-      m.redraw(true);
-    }
+  function dismissFlash(index) {
+    flashMessages().splice(index, 1);
+    m.redraw();
   }
 
   function addMovie(e) {
@@ -25,8 +23,12 @@ function controller(main) {
     if (title) {
       newTitle("");
       Movie.addNew(title).then(function(movie) {
-        makeAlert("success", "\"" + movie.Title + "\" has been added to the list!");
-        m.route("/movie/" + movie.imdbID);
+        if (movie.Title) {
+          flash("success", "\"" + movie.Title + "\" has been added to the list!");
+          m.route("/movie/" + movie.imdbID);
+        } else {
+          flash("warning", "Sorry, no movie found with the title \"" + title + "\"");
+        }
       });
     }
   }
@@ -34,10 +36,10 @@ function controller(main) {
   return function() {
     return {
       addMovie: addMovie,
-      alerts: alerts,
+      flashMessages: flashMessages,
       newTitle: newTitle,
       main: main,
-      makeAlert: makeAlert,
+      flash: flash,
       dismissAlert: dismissAlert
     };
   };
@@ -48,14 +50,14 @@ function controller(main) {
 
 function view(ctrl) {
 
-  function showAlert(alert, index) {
-    // get around window timeout event issues
-    var dismissAlert = function(forceRedraw) { return ctrl.dismissAlert.bind(ctrl, index, forceRedraw); };
-    window.setTimeout(dismissAlert(true), 6000);
+  function showFlashMessage(alert, index) {
+    // get around window timeout event issues: has to be better way
+    var dismissFlashMessage = ctrl.dismissFlashMessage.bind(ctrl, index);
+    window.setTimeout(dismissFlashMessage, 6000);
 
     return m("div.alert.alert-dismissable.alert-" + alert.level, {role: "alert"}, [
         m("button.close[type=button][aria-label=Close][data-dismiss=alert]",  {
-          onclick: dismissAlert(false)
+          onclick: dismissFlashMessage
         },
         m("span[aria-hidden=true]", m.trust("&times;"))),
         alert.msg
@@ -64,17 +66,15 @@ function view(ctrl) {
 
   return m("div.container", [
      m("h1", "Random movies"),
-      ctrl.alerts().map(showAlert),
+      ctrl.flashMessaages().map(showFlashMessage),
       m("form.form-horizontal", {onsubmit: ctrl.addMovie}, [
-        m("div.form-group", [
-          m("input.form-control.form-control-bg", {
+        m("div.form-group", m("input.form-control.form-control-bg", {
             type: "text",
             placeholder: "Add another title",
             value: ctrl.newTitle(),
             onchange: m.withAttr("value", ctrl.newTitle)
-          }),
-          m("button.form-control.btn.btn-primary[type=submit]", buttonLabel("plus", "Add new"))
-        ])
+          })),
+        m("div.form-group", m("button.form-control.btn.btn-primary[type=submit]", buttonLabel("plus", "Add")))
      ]),
      m.component(ctrl.main, {parent: ctrl})
   ]);
