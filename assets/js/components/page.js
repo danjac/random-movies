@@ -40,7 +40,7 @@ function controller(main) {
       newTitle: newTitle,
       main: main,
       flash: flash,
-      dismissAlert: dismissAlert
+      dismissFlash: dismissFlash
     };
   };
 
