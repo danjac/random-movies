@@ -8,7 +8,7 @@ function controller(main) {
   newTitle = m.prop("");
   flashMessages = m.prop([]);
 
-  flash(status, msg) {
+  function flash(status, msg) {
       flashMessages().push({ status: status, msg: msg });
   }
 
@@ -66,7 +66,7 @@ function view(ctrl) {
 
   return m("div.container", [
      m("h1", "Random movies"),
-      ctrl.flashMessaages().map(showFlashMessage),
+      ctrl.flashMessages().map(showFlashMessage),
       m("form.form-horizontal", {onsubmit: ctrl.addMovie}, [
         m("div.form-group", m("input.form-control.form-control-bg", {
             type: "text",
