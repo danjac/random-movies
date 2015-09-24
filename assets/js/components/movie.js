@@ -32,7 +32,7 @@ export default class Movie extends React.Component {
 
   fetchMovie(props) {
     const id = props.params && props.params.id;
-    if (id) {
+    if (id && (!this.props.movie || id !== this.props.movie.imdbID)) {
       this.actions.getMovie(id);
     } else {
       this.actions.getRandomMovie();

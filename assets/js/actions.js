@@ -4,7 +4,13 @@ import * as WebAPI from './api';
 
 export const getMovie = createAction('GET_MOVIE', id => WebAPI.getMovie(id));
 
-export const addMovie = createAction('ADD_MOVIE', title => WebAPI.addMovie(title));
+export const addMovie = createAction('ADD_MOVIE', async (id, history) => {
+  const result = await WebAPI.addMovie(id);
+  if (result && result.imdbID) {
+    history.pushState(null, `/movie/${result.imdbID}/`);
+  }
+  return result;
+});
 
 export const resetMovie = createAction('RESET_MOVIE');
 

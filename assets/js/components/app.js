@@ -21,8 +21,8 @@ export default class App extends React.Component {
     children: PropTypes.node
   }
 
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+    super(props, context);
     const { dispatch } = this.props;
     this.actions = bindActionCreators(actions, dispatch);
   }
@@ -33,7 +33,7 @@ export default class App extends React.Component {
           title = node.value.trim();
 
     if (title) {
-      this.actions.addMovie(title);
+      this.actions.addMovie(title, this.props.history);
       node.value = "";
     }
   }
