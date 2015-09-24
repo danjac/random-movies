@@ -1,5 +1,6 @@
 const initialState = {
   movie: null,
+  newMovie: null,
   movies: []
 };
 
@@ -12,9 +13,12 @@ export default function(state=initialState, action) {
       state.movies = action.payload;
       return state;
     case 'ADD_MOVIE':
+      state.newMovie = action.payload;
+      return state;
     case 'GET_MOVIE':
     case 'GET_RANDOM_MOVIE':
       state.movie = action.payload;
+      state.newMovie = null;
       return state;
   }
   return state;

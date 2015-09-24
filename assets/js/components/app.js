@@ -17,7 +17,8 @@ import * as actions from '../actions';
 export default class App extends React.Component {
 
   static propTypes = {
-    dispatch: PropTypes.func.isRequired
+    dispatch: PropTypes.func.isRequired,
+    children: PropTypes.node
   }
 
   constructor(props) {
