@@ -1,93 +1,86 @@
-var m = require('mithril');
-var _ = require('lodash');
+import React, { PropTypes } from 'react';
+import { Link } from 'react-router';
 
-var Movie = require('../model').Movie;
-var buttonLabel = require('./widgets').buttonLabel;
+import {
+  Input,
+  Button,
+  ButtonInput
+} from 'react-bootstrap';
 
-module.exports = {
+import { bindActionCreators } from 'redux';
 
-  controller: function(args){
+import { connect } from 'react-redux';
 
-    var movie = m.prop({});
+import * as actions from '../actions';
 
-    function nextMovie(e) {
-      e.preventDefault();
-      Movie.getRandom().then(movie);
-    }
+@connect(state => {
+  return {
+      movie: state.movie
+  };
+})
+export default class Movie extends React.Component {
 
-    function deleteMovie(e) {
-      e.preventDefault();
-      var mv = movie();
-      if (window.confirm("Are you sure you want to remove \"" + mv.Title + "\"?")) {
-      Movie.deleteMovie(mv.imdbID).then(function() {
-          args.parent.flash("info", "\"" + mv.Title + "\" has been deleted");
-          m.route("/titles/");
-      });
-      }
-    }
-
-    var imdbID = m.route.param("id");
-
-    if (imdbID) {
-      Movie.getMovie(imdbID).then(movie);
-    } else {
-      Movie.getRandom().then(movie);
-    }
-
-    return {
-      movie: movie,
-      nextMovie: nextMovie,
-      deleteMovie: deleteMovie
-    };
-  },
-
-  view: function(ctrl) {
-    var movie = ctrl.movie();
-
-    function showButtons() {
-      var buttons = [
-        m("button.btn.btn-primary", {onclick: ctrl.nextMovie}, buttonLabel("random", "Show me another")),
-        m("a.btn.btn-default[href=#/titles]", buttonLabel("list", "See all titles")),
-      ];
-      if (movie.imdbID) {
-        buttons.push(m("a.btn.btn-danger", {onclick: ctrl.deleteMovie}, buttonLabel("trash", "Remove this movie")));
-      }
-
-      return m("div.btn-group", buttons);
-    }
-
-    function showPoster() {
-      if (movie.Poster == 'N/A') {
-        return m("b", "No poster available");
-      }
-      return m("a[target=_blank]", {href: imdbURL},  m("img.img-responsive", {src: movie.Poster}));
-    }
-
-    if (!movie || !movie.Title || !movie.Poster) {
-      return showButtons();
-    }
-
-    var imdbURL = "http://www.imdb.com/title/" +  movie.imdbID + "/";
-
-    return m("div.row", [
-      m("div.col-md-3", [
-        showPoster()
-      ]),
-      m("div.col-md-9", [
-        m("h2", m("a[target=_blank]", {href: imdbURL}, movie.Title)),
-        m("dl.dl-unstyled", [
-          m("dt", "Year"),
-          m("dd", movie.Year),
-          m("dt", "Actors"),
-          m("dd", movie.Actors),
-          m("dt", "Director"),
-          m("dd", movie.Director),
-        ]),
-        m("p.well", movie.Plot),
-        showButtons()
-      ])
-    ]);
+  static propTypes = {
+    dispatch: PropTypes.func.isRequired
   }
-};
+
+  constructor(props) {
+    super(props);
+    const { dispatch } = this.props;
+    this.actions = bindActionCreators(actions, dispatch);
+  }
+
+  fetchMovie(props) {
+    const id = props.params && props.params.id;
+    if (id) {
+      this.actions.getMovie(id);
+    } else {
+      this.actions.getRandomMovie();
+    }
+  }
+
+  componentDidMount() {
+    this.fetchMovie(this.props);
+  }
+
+  componentWillReceiveProps(props) {
+    if (props.params.id !== this.props.params.id) {
+      this.fetchMovie(props);
+    }
+  }
+
+  componentWillUnmount() {
+    this.actions.resetMovie();
+  }
+
+  render() {
+    const movie = this.props.movie;
+    if (!movie || !movie.imdbID) {
+      return <div></div>;
+    }
+    return (
+      <div className="row">
+        <div className="col-md-3">
+          <img className="img-responsive" src={movie.Poster} alt={movie.Title} />
+        </div>
+        <div className="col-md-9">
+          <h2>{movie.Title}</h2>
+          <dl className="dl-unstyled">
+            <dt>Year</dt>
+            <dd>{movie.Year}</dd>
+            <dt>Actors</dt>
+            <dd>{movie.Actors}</dd>
+            <dt>Director</dt>
+            <dd>{movie.Director}</dd>
+          </dl>
+          <p className="well">{movie.Plot}</p>
+          <Button bgStyle="primary" onClick={this.actions.getRandomMovie.bind(this)}>Get another</Button>
+          <Link className="btn btn-default" to="/all/">See all</Link>
+        </div>
+      </div>
+    );
+  }
+
+}
 
 
