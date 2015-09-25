@@ -1,7 +1,21 @@
 var m = require('mithril');
+var Velocity = require('velocity-animate');
 
 var Movie = require('../model').Movie;
 var buttonLabel = require('./widgets').buttonLabel;
+
+function fadeOut(callback) {
+  return function(e) {
+    m.redraw.strategy("none"); // don't redraw yet
+    Velocity(e.target, { opacity: 0 }, {
+      complete: function() {
+        m.startComputation();
+        callback();
+        m.endComputation();
+      }
+    });
+  };
+}
 
 function controller(main) {
 
@@ -55,9 +69,9 @@ function view(ctrl) {
     var dismissFlash = ctrl.dismissFlash.bind(ctrl, index);
     window.setTimeout(dismissFlash, 6000);
 
-    return m("div.alert.alert-dismissable.alert-" + alert.status, {role: "alert"}, [
+    return m("div#alert-" + index +".alert.alert-dismissable.alert-" + alert.status, {role: "alert"}, [
         m("button.close[type=button][aria-label=Close][data-dismiss=alert]",  {
-          onclick: dismissFlash
+          onclick: fadeOut(dismissFlash)
         },
         m("span[aria-hidden=true]", m.trust("&times;"))),
         alert.msg
