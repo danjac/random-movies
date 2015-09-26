@@ -1,20 +1,30 @@
 import React from 'react';
+import { Route } from 'react-router';
+
+import { ReduxRouter } from 'redux-router';
 
 import { Provider } from 'react-redux';
-import createHashHistory from 'history/lib/createHashHistory';
 
-import routes from './routes';
-import configureStore from './store';
+import { App, Movie, MovieList } from './components';
 
-const store = configureStore();
-const history = createHashHistory();
+import store from './store';
 
 class Container extends React.Component {
   render() {
     return (
     <div>
     <Provider store={store}>
-      {() => routes(history)}
+      {() => {
+      return (
+        <ReduxRouter>
+          <Route component={App}>
+            <Route path="/" component={Movie} />
+            <Route path="/all/" component={MovieList} />
+            <Route path="/movie/:id/" component={Movie} />
+          </Route>
+        </ReduxRouter>
+        );
+      }}
     </Provider>
     </div>
     );

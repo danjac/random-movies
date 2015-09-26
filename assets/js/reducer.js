@@ -1,10 +1,13 @@
+import { combineReducers } from 'redux';
+import { routerStateReducer } from 'redux-router';
+
 const initialState = {
   movie: null,
   newMovie: null,
   movies: []
 };
 
-export default function(state=initialState, action) {
+function mainReducer(state=initialState, action) {
   switch(action.type) {
     case 'RESET_MOVIE':
       state.movie = null;
@@ -21,3 +24,8 @@ export default function(state=initialState, action) {
   }
   return state;
 }
+
+export default combineReducers({
+  main: mainReducer,
+  router: routerStateReducer
+});

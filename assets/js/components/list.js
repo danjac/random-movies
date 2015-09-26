@@ -20,7 +20,7 @@ function getInitial(title) {
 }
 
 @connect(state => {
-  let movies = state.movies;
+  let movies = state.main.movies;
   movies.sort((left, right) => left.Title > right.Title ? 1 : (left.Title < right.Title ? -1 : 0));
   return {
       movies: movies

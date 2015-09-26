@@ -12,7 +12,9 @@ import { connect } from 'react-redux';
 import * as actions from '../actions';
 
 @connect(state => {
-  return state;
+  return {
+      router: state.router
+  };
 })
 export default class App extends React.Component {
 
@@ -33,7 +35,7 @@ export default class App extends React.Component {
           title = node.value.trim();
 
     if (title) {
-      this.actions.addMovie(title, this.props.history);
+      this.actions.addMovie(title, this.props.router);
       node.value = "";
     }
   }

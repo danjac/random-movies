@@ -15,7 +15,7 @@ import * as actions from '../actions';
 
 @connect(state => {
   return {
-      movie: state.movie
+      movie: state.main.movie
   };
 })
 export default class Movie extends React.Component {

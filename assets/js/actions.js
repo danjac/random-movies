@@ -4,10 +4,11 @@ import * as WebAPI from './api';
 
 export const getMovie = createAction('GET_MOVIE', id => WebAPI.getMovie(id));
 
-export const addMovie = createAction('ADD_MOVIE', async (id, history) => {
+export const addMovie = createAction('ADD_MOVIE', async (id, router) => {
   const result = await WebAPI.addMovie(id);
   if (result && result.imdbID) {
-    history.pushState(null, `/movie/${result.imdbID}/`);
+    console.log(result, router);
+    router.pushState(null, `/movie/${result.imdbID}/`);
   }
   return result;
 });
