@@ -4,16 +4,13 @@ var Velocity = require('velocity-animate');
 var Movie = require('../model').Movie;
 var buttonLabel = require('./widgets').buttonLabel;
 
-function fadeOut(callback) {
-  return function(e) {
-    m.redraw.strategy("none"); // don't redraw yet
-    Velocity(e.target, { opacity: 0 }, {
-      complete: function() {
-        m.startComputation();
-        callback();
-        m.endComputation();
-      }
-    });
+
+function dismissFlashOnFadeOut(callback) {
+  return function fadeOut(element, isInitialized, context) {
+    if(!isInitialized) {
+      // tbd: need callback to remove alert in model
+      Velocity(element, { opacity: 0 }, { delay: 3000, complete: callback });
+    }
   };
 }
 
@@ -67,15 +64,11 @@ function view(ctrl) {
   function showFlashMessage(alert, index) {
     // get around window timeout event issues: has to be better way
     var dismissFlash = ctrl.dismissFlash.bind(ctrl, index);
-    window.setTimeout(dismissFlash, 6000);
 
-    return m("div#alert-" + index +".alert.alert-dismissable.alert-" + alert.status, {role: "alert"}, [
-        m("button.close[type=button][aria-label=Close][data-dismiss=alert]",  {
-          onclick: fadeOut(dismissFlash)
-        },
-        m("span[aria-hidden=true]", m.trust("&times;"))),
-        alert.msg
-    ]);
+    return m("div#alert-" + index +".alert.alert-dismissable.alert-" + alert.status, {
+        role: "alert",
+        config: dismissFlashOnFadeOut(dismissFlash)
+        }, alert.msg);
   }
 
   return m("div.container", [
