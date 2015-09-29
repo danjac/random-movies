@@ -16,6 +16,10 @@ export function getMovie(id) {
       .then(response => response.json());
 }
 
+export function deleteMovie(id) {
+  return fetch("/api/movie/" + id, { method: "DELETE" });
+}
+
 export function addMovie(title) {
   return fetch("/api/", {
     method: "POST",

@@ -14,6 +14,8 @@ export const addMovie = createAction('ADD_MOVIE', async (id, pushState) => {
 
 export const resetMovie = createAction('RESET_MOVIE');
 
+export const deleteMovie = createAction('DELETE_MOVIE', WebAPI.deleteMovie);
+
 export const getMovies = createAction('GET_MOVIES', WebAPI.getMovies)
 
 export const getRandomMovie = createAction('GET_RANDOM_MOVIE', WebAPI.getRandomMovie)

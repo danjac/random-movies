@@ -10,12 +10,13 @@ import {
 import { bindActionCreators } from 'redux';
 
 import { connect } from 'react-redux';
+import { pushState } from 'redux-router';
 
 import * as actions from '../actions';
 
 @connect(state => {
   return {
-      movie: state.main.movie
+    movie: state.main.movie,
   };
 })
 export default class Movie extends React.Component {
@@ -26,7 +27,12 @@ export default class Movie extends React.Component {
 
   constructor(props) {
     super(props);
-    this.actions = bindActionCreators(actions, this.props.dispatch);
+    this.actions = bindActionCreators({ pushState, ...actions}, this.props.dispatch);
+  }
+
+  deleteMovie() {
+    this.actions.deleteMovie(this.props.params.id);
+    this.actions.pushState(null, "/all/");
   }
 
   render() {
@@ -52,6 +58,7 @@ export default class Movie extends React.Component {
           <p className="well">{movie.Plot}</p>
           <Button bsStyle="primary" onClick={this.actions.getRandomMovie.bind(this)}>Get another</Button>
           <Link className="btn btn-default" to="/all/">See all</Link>
+          <Button bsStyle="danger" onClick={this.deleteMovie.bind(this)}>Delete</Button>
         </div>
       </div>
     );
