@@ -41,7 +41,7 @@ class Container extends React.Component {
       {() => {
       return (
         <ReduxRouter>
-          <Route component={App}>
+          <Route component={App} onEnter={() => console.log("onenter app")}>
             <Route path="/" component={Movie} onEnter={getRandomMovie} onLeave={resetMovie} />
             <Route path="/all/" component={MovieList} onEnter={getMovies} />
             <Route path="/movie/:id/" component={Movie} onEnter={getMovie} onLeave={resetMovie} />
