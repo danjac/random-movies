@@ -27,9 +27,16 @@
     "babel-core": "^5.8.25",
     "babel-loader": "^5.3.2",
     "babel-runtime": "^5.8.25",
+    "css-loader": "^0.19.0",
+    "extract-text-webpack-plugin": "^0.8.2",
     "react-hot-loader": "^1.3.0",
+    "style-loader": "^0.12.4",
     "uglifyjs": "^2.4.10",
-    "webpack": "^1.12.2"
+    "url-loader": "^0.5.6",
+    "webpack": "^1.12.2",
+    "webpack-dev-server": "^1.12.0"
   },
-  "scripts": {}
+  "scripts": {
+    "start": "node server.js"
+  }
 }

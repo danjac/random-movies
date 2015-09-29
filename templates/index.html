@@ -1,13 +1,17 @@
 <html>
 	<head>
         <title>Random movie {{ .env }}</title>
-        <link rel="stylesheet" href="/static/css/bootstrap.min.css" />
-        <link rel="stylesheet" href="/static/css/bootstrap-theme.min.css" />
-        </head>
+        {{if eq .env "dev"}}
+        <link rel="stylesheet" href="http://localhost:8080/static/main.css">
+        {{else}}
+        <link rel="stylesheet" href="/static/main.css">
+        {{end}}
+
+    </head>
 	<body>
     </body>
     {{if eq .env "dev"}}
-    <script src="http://localhost:8080/main.js"></script>
+    <script src="http://localhost:8080/static/main.js"></script>
     {{else}}
     <script src="/static/js/main.js"></script>
     {{end}}

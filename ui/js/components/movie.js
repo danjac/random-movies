@@ -4,7 +4,9 @@ import { Link } from 'react-router';
 import {
   Input,
   Button,
-  ButtonInput
+  ButtonInput,
+  ButtonGroup,
+  Glyphicon
 } from 'react-bootstrap';
 
 import { bindActionCreators } from 'redux';
@@ -43,7 +45,7 @@ export default class Movie extends React.Component {
     return (
       <div className="row">
         <div className="col-md-3">
-          <img className="img-responsive" src={movie.Poster} alt={movie.Title} />
+          {movie.Poster === 'N/A'? 'No poster available' : <img className="img-responsive" src={movie.Poster} alt={movie.Title} />}
         </div>
         <div className="col-md-9">
           <h2>{movie.Title}</h2>
@@ -56,9 +58,11 @@ export default class Movie extends React.Component {
             <dd>{movie.Director}</dd>
           </dl>
           <p className="well">{movie.Plot}</p>
-          <Button bsStyle="primary" onClick={this.actions.getRandomMovie.bind(this)}>Get another</Button>
-          <Link className="btn btn-default" to="/all/">See all</Link>
-          <Button bsStyle="danger" onClick={this.deleteMovie.bind(this)}>Delete</Button>
+          <ButtonGroup>
+          <Button bsStyle="primary" onClick={this.actions.getRandomMovie.bind(this)}><Glyphicon glyph="random" /> Get another</Button>
+          <Link className="btn btn-default" to="/all/"><Glyphicon glyph="list" /> See all</Link>
+          <Button bsStyle="danger" onClick={this.deleteMovie.bind(this)}><Glyphicon glyph="trash" /> Delete</Button>
+          </ButtonGroup>
         </div>
       </div>
     );

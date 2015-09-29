@@ -1,10 +1,13 @@
 import React, { PropTypes } from 'react';
 import { pushState } from 'redux-router';
 
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 import {
   Input,
   Button,
-  ButtonInput
+  ButtonInput,
+  Glyphicon
 } from 'react-bootstrap';
 
 import { bindActionCreators } from 'redux';
@@ -39,8 +42,8 @@ export default class App extends React.Component {
           title = node.value.trim();
 
     if (title) {
-      this.actions.addMovie(title, this.actions.pushState);
       node.value = "";
+      this.actions.addMovie(title, this.actions.pushState);
     }
   }
 
@@ -50,8 +53,7 @@ export default class App extends React.Component {
         <Input type="text"
                 ref="title"
                 placeholder="Add another title" />
-        <ButtonInput bsStyle="primary"
-                     type="submit">Add</ButtonInput>
+              <Button bsStyle="primary" type="submit"><Glyphicon glyph="plus" /> Add</Button>
         </form>
     );
   }

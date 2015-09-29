@@ -118,7 +118,7 @@ func main() {
 
 	r := gin.Default()
 
-	r.Use(static.Serve("/static", static.LocalFile("static", true)))
+	r.Use(static.Serve("/static", static.LocalFile("dist", true)))
 	r.LoadHTMLGlob("templates/*")
 
 	r.GET("/", func(c *gin.Context) {
