@@ -1,4 +1,5 @@
 import React, { PropTypes } from 'react';
+import { pushState } from 'redux-router';
 
 import {
   Input,
@@ -26,7 +27,10 @@ export default class App extends React.Component {
   constructor(props, context) {
     super(props, context);
     const { dispatch } = this.props;
-    this.actions = bindActionCreators(actions, dispatch);
+      this.actions = bindActionCreators({
+        pushState,
+        ...actions
+      }, dispatch);
   }
 
   addMovie(event) {
@@ -35,7 +39,7 @@ export default class App extends React.Component {
           title = node.value.trim();
 
     if (title) {
-      this.actions.addMovie(title, this.props.router);
+      this.actions.addMovie(title, this.actions.pushState);
       node.value = "";
     }
   }

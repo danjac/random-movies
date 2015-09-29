@@ -26,31 +26,7 @@ export default class Movie extends React.Component {
 
   constructor(props) {
     super(props);
-    const { dispatch } = this.props;
-    this.actions = bindActionCreators(actions, dispatch);
-  }
-
-  fetchMovie(props) {
-    const id = props.params && props.params.id;
-    if (id && (!this.props.movie || id !== this.props.movie.imdbID)) {
-      this.actions.getMovie(id);
-    } else {
-      this.actions.getRandomMovie();
-    }
-  }
-
-  componentDidMount() {
-    this.fetchMovie(this.props);
-  }
-
-  componentWillReceiveProps(props) {
-    if (props.params.id !== this.props.params.id) {
-      this.fetchMovie(props);
-    }
-  }
-
-  componentWillUnmount() {
-    this.actions.resetMovie();
+    this.actions = bindActionCreators(actions, this.props.dispatch);
   }
 
   render() {
@@ -74,7 +50,7 @@ export default class Movie extends React.Component {
             <dd>{movie.Director}</dd>
           </dl>
           <p className="well">{movie.Plot}</p>
-          <Button bgStyle="primary" onClick={this.actions.getRandomMovie.bind(this)}>Get another</Button>
+          <Button bsStyle="primary" onClick={this.actions.getRandomMovie.bind(this)}>Get another</Button>
           <Link className="btn btn-default" to="/all/">See all</Link>
         </div>
       </div>

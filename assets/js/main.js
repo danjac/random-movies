@@ -1,13 +1,29 @@
 import React from 'react';
 import { Route } from 'react-router';
-
 import { ReduxRouter } from 'redux-router';
-
 import { Provider } from 'react-redux';
-
 import { App, Movie, MovieList } from './components';
 
-import store from './store';
+import * as actions from './actions';
+import configureStore from './store';
+
+const store = configureStore();
+
+function getRandomMovie() {
+  store.dispatch(actions.getRandomMovie());
+}
+
+function getMovies() {
+  store.dispatch(actions.getMovies());
+}
+
+function getMovie(location) {
+  store.dispatch(actions.getMovie(location.params.id));
+}
+
+function resetMovie() {
+  store.dispatch(actions.resetMovie());
+}
 
 class Container extends React.Component {
   render() {
@@ -18,9 +34,9 @@ class Container extends React.Component {
       return (
         <ReduxRouter>
           <Route component={App}>
-            <Route path="/" component={Movie} />
-            <Route path="/all/" component={MovieList} />
-            <Route path="/movie/:id/" component={Movie} />
+            <Route path="/" component={Movie} onEnter={getRandomMovie} onLeave={resetMovie} />
+            <Route path="/all/" component={MovieList} onEnter={getMovies} />
+            <Route path="/movie/:id/" component={Movie} onEnter={getMovie} onLeave={resetMovie} />
           </Route>
         </ReduxRouter>
         );

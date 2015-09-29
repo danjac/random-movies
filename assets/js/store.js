@@ -13,7 +13,7 @@ const loggingMiddleware = createLogger({
   logger: console
 });
 
-export default compose(
+const createAppStore = compose(
   applyMiddleware(
     thunkMiddleware,
     loggingMiddleware,
@@ -22,4 +22,8 @@ export default compose(
   reduxReactRouter({
     createHistory: createHashHistory
   })
-)(createStore)(reducer);
+)(createStore);
+
+export default function configureStore(initialState) {
+  return createAppStore(reducer, initialState);
+}

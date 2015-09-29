@@ -38,10 +38,6 @@ export default class MovieList extends React.Component {
     this.actions = bindActionCreators(actions, dispatch);
   }
 
-  componentDidMount() {
-    this.actions.getMovies();
-  }
-
   render() {
     const movies = this.props.movies;
     const groups = _.groupBy(movies, movie => getInitial(movie.Title));
