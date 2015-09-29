@@ -1,20 +1,11 @@
 <html>
 	<head>
         <title>Random movie {{ .env }}</title>
-        {{if eq .env "dev"}}
-        <link rel="stylesheet" href="http://localhost:8080/static/main.css">
-        {{else}}
-        <link rel="stylesheet" href="/static/main.css">
-        {{end}}
-
+        <link rel="stylesheet" href="{{ .staticHost }}/static/main.css">
     </head>
 	<body>
     </body>
-    {{if eq .env "dev"}}
-    <script src="http://localhost:8080/static/main.js"></script>
-    {{else}}
-    <script src="/static/js/main.js"></script>
-    {{end}}
+    <script src="{{ .staticHost }}/static/main.js"></script>
 
 
 </html>

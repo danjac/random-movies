@@ -122,7 +122,14 @@ func main() {
 	r.LoadHTMLGlob("templates/*")
 
 	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", gin.H{"env": *env})
+		var staticHost string
+		if *env == "dev" {
+			staticHost = "http://localhost:8080"
+		}
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"env":        *env,
+			"staticHost": staticHost,
+		})
 	})
 
 	api := r.Group("/api/")

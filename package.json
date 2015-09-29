@@ -4,9 +4,11 @@
   "description": "",
   "author": "Dan Jacob",
   "license": "MIT",
+  "scripts": {
+      "build": "webpack -p --config=webpack.prod.config"
+  },
   "dependencies": {
     "bootstrap": "^3.3.5",
-    "css-loader": "^0.19.0",
     "isomorphic-fetch": "^2.1.1",
     "jquery": "^2.1.4",
     "lodash": "^3.10.1",
@@ -19,8 +21,7 @@
     "redux-logger": "^1.0.9",
     "redux-promise": "^0.5.0",
     "redux-router": "^1.0.0-beta3",
-    "redux-thunk": "^1.0.0",
-    "style-loader": "^0.12.4"
+    "redux-thunk": "^1.0.0"
   },
   "devDependencies": {
     "babel": "^5.8.23",
@@ -35,8 +36,5 @@
     "url-loader": "^0.5.6",
     "webpack": "^1.12.2",
     "webpack-dev-server": "^1.12.0"
-  },
-  "scripts": {
-    "start": "node server.js"
   }
 }
