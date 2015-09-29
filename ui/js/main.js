@@ -2,6 +2,8 @@ import React from 'react';
 import { Route } from 'react-router';
 import { ReduxRouter } from 'redux-router';
 import { Provider } from 'react-redux';
+import { DevTools, DebugPanel, LogMonitor } from 'redux-devtools/lib/react';
+
 import { App, Movie, MovieList } from './components';
 
 import * as actions from './actions';
@@ -42,6 +44,9 @@ class Container extends React.Component {
         );
       }}
     </Provider>
+    <DebugPanel top right bottom>
+        <DevTools store={store} monitor={LogMonitor} />
+    </DebugPanel>
     </div>
     );
   }

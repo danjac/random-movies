@@ -61,7 +61,7 @@ export default class App extends React.Component {
   render() {
     return (
       <div className="container">
-        <h1>Random movies!!!</h1>
+        <h1>Random movies</h1>
         {this.renderForm()}
         {this.props.children}
       </div>
