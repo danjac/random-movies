@@ -17,9 +17,9 @@
   },
   "scripts": {
     "livereload": "live-reload static/",
-    "watch:js": "watchify assets/js/main.js -o static/js/main.js --debug",
+    "watch:js": "watchify ui/js/main.js -o static/js/main.js --debug",
     "build:deps": "cp -r node_modules/bootstrap/dist/* static",
-    "build:js": "browserify assets/js/main.js | uglifyjs -o static/js/main.js",
+    "build:js": "browserify ui/js/main.js | uglifyjs -o static/js/main.js",
     "build": "npm run build:deps && npm run build:js"
   }
 }
