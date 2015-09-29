@@ -1,7 +1,7 @@
 var path = require('path');
 
 module.exports = {
-  entry: "./assets/js/main.js",
+  entry: "./ui/js/main.js",
   output: {
     path: __dirname,
     filename: "main.js"
@@ -12,7 +12,7 @@ module.exports = {
       {
         test: /\.(js|jsx)$/,
         loaders: ['react-hot', 'babel?stage=0&optional[]=runtime'],
-        include: path.join(__dirname, 'assets/js')
+        include: path.join(__dirname, 'ui/js')
       }
     ]
   }

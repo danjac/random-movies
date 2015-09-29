@@ -1,0 +1,7 @@
+export default {
+  RESET_MOVIE: Symbol('RESET_MOVIE'),
+  DELETE_MOVIE: Symbol('DELETE_MOVIE'),
+  GET_MOVIE: Symbol('GET_MOVIE'),
+  GET_RANDOM_MOVIE: Symbol('GET_RANDOM_MOVIE'),
+  GET_MOVIES: Symbol('GET_MOVIES')
+};
