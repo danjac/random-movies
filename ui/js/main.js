@@ -27,6 +27,12 @@ function resetMovie() {
   store.dispatch(actions.resetMovie());
 }
 
+const debugPanel = window.__ENV__ === "dev" && (
+  <DebugPanel top right bottom>
+      <DevTools store={store} monitor={LogMonitor} />
+  </DebugPanel>
+) || "";
+
 class Container extends React.Component {
   render() {
     return (
@@ -44,9 +50,7 @@ class Container extends React.Component {
         );
       }}
     </Provider>
-    <DebugPanel top right bottom>
-        <DevTools store={store} monitor={LogMonitor} />
-    </DebugPanel>
+    {debugPanel}
     </div>
     );
   }
