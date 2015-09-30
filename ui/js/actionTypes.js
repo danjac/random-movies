@@ -1,4 +1,5 @@
 export default {
+  DISMISS_MESSAGE: Symbol('DISMISS_MESSAGE'),
   RESET_MOVIE: Symbol('RESET_MOVIE'),
   DELETE_MOVIE: Symbol('DELETE_MOVIE'),
   ADD_MOVIE: Symbol('ADD_MOVIE'),

@@ -14,6 +14,8 @@ export const addMovie = createAction(ActionTypes.ADD_MOVIE, async (id, pushState
   return result;
 });
 
+export const dismissMessage = createAction(ActionTypes.DISMISS_MESSAGE, index => index);
+
 export const resetMovie = createAction(ActionTypes.RESET_MOVIE);
 
 export const deleteMovie = createAction(ActionTypes.DELETE_MOVIE, WebAPI.deleteMovie);

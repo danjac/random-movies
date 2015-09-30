@@ -7,7 +7,8 @@ import {
   Input,
   Button,
   ButtonInput,
-  Glyphicon
+  Glyphicon,
+  Alert
 } from 'react-bootstrap';
 
 import { bindActionCreators } from 'redux';
@@ -17,6 +18,7 @@ import * as actions from '../actions';
 
 @connect(state => {
   return {
+      messages: state.main.messages,
       router: state.router
   };
 })
@@ -61,6 +63,14 @@ export default class App extends React.Component {
   render() {
     return (
       <div className="container">
+        {this.props.messages.map((msg, index) => {
+        const dismissAlert = (index) => { this.actions.dismissMessage(index); };
+        return (
+        <Alert key={index} bsStyle={msg.status} onDismiss={dismissAlert} dismissAfter={3000}>
+          <p>{msg.msg}</p>
+        </Alert>
+          );
+        })}
         <h1>Random movies</h1>
         {this.renderForm()}
         {this.props.children}
