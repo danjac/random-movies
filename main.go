@@ -209,11 +209,10 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		if movie.Title != "" {
-			if err := movie.Save(db); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+
+		if err := movie.Save(db); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		render.JSON(w, http.StatusOK, movie)
 	}).Methods("POST")
