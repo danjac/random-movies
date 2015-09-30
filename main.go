@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"github.com/gin-gonic/contrib/static"
-	"github.com/gin-gonic/gin"
+	"github.com/asaskevich/govalidator"
+	"github.com/codegangsta/negroni"
+	"github.com/gorilla/mux"
+	"github.com/unrolled/render"
 	"gopkg.in/redis.v3"
 	"io/ioutil"
 	"net/http"
@@ -19,6 +21,21 @@ type Movie struct {
 	Plot     string
 	Director string
 	ImdbID   string `json:"imdbID"`
+}
+
+type MovieForm struct {
+	Title string `valid:"required"`
+}
+
+func (f *MovieForm) Decode(r *http.Request) error {
+	defer r.Body.Close()
+	if err := json.NewDecoder(r.Body).Decode(f); err != nil {
+		return err
+	}
+	if _, err := govalidator.ValidateStruct(f); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *Movie) MarshalBinary() ([]byte, error) {
@@ -116,89 +133,93 @@ func main() {
 		panic(err)
 	}
 
-	r := gin.Default()
+	router := mux.NewRouter()
+	render := render.New()
 
-	r.Use(static.Serve("/static", static.LocalFile("dist", true)))
-	r.LoadHTMLGlob("templates/*")
+	// static content
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./dist/"))))
 
-	r.GET("/", func(c *gin.Context) {
+	// index page
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var staticHost string
 		if *env == "dev" {
 			staticHost = "http://localhost:8080"
 		}
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"env":        *env,
+
+		ctx := map[string]string{
 			"staticHost": staticHost,
-		})
+			"env":        *env,
+		}
+
+		render.HTML(w, http.StatusOK, "index", ctx)
 	})
 
-	api := r.Group("/api/")
+	// API calls
+	api := router.PathPrefix("/api/").Subrouter()
 
-	api.GET("/", func(c *gin.Context) {
+	api.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		movie, err := getRandomMovie(db)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		c.JSON(http.StatusOK, movie)
-	})
+		render.JSON(w, http.StatusOK, movie)
+	}).Methods("GET")
 
-	api.GET("/movie/:id", func(c *gin.Context) {
-		movie, err := getMovie(db, c.Param("id"))
+	api.HandleFunc("/movie/{id}", func(w http.ResponseWriter, r *http.Request) {
+		movie, err := getMovie(db, mux.Vars(r)["id"])
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		if movie == nil {
-			c.AbortWithStatus(http.StatusNotFound)
+			http.NotFound(w, r)
 			return
 		}
-		c.JSON(http.StatusOK, movie)
-	})
+		render.JSON(w, http.StatusOK, movie)
+	}).Methods("GET")
 
-	api.DELETE("/movie/:id", func(c *gin.Context) {
-		if err := db.Del(c.Param("id")).Err(); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+	api.HandleFunc("/movie/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if err := db.Del(mux.Vars(r)["id"]).Err(); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		c.String(http.StatusOK, "Deleted")
-	})
+		render.Text(w, http.StatusOK, "Deleted")
+	}).Methods("DELETE")
 
-	api.GET("/all", func(c *gin.Context) {
+	api.HandleFunc("/all/", func(w http.ResponseWriter, r *http.Request) {
 		movies, err := getMovies(db)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		c.JSON(http.StatusOK, movies)
-	})
+		render.JSON(w, http.StatusOK, movies)
+	}).Methods("GET")
 
-	api.POST("/", func(c *gin.Context) {
+	api.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
-		s := &struct {
-			Title string `json:"title", binding:"required"`
-		}{}
-
-		if err := c.Bind(s); err != nil || s.Title == "" {
-			c.AbortWithStatus(http.StatusBadRequest)
+		f := &MovieForm{}
+		if err := f.Decode(r); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		movie, err := getMovieFromOMDB(s.Title)
+
+		movie, err := getMovieFromOMDB(f.Title)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		if movie.Title != "" {
 			if err := movie.Save(db); err != nil {
-				c.AbortWithError(http.StatusInternalServerError, err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 		}
-		c.JSON(http.StatusOK, movie)
-	})
+		render.JSON(w, http.StatusOK, movie)
+	}).Methods("POST")
 
-	if err := r.Run(":" + *port); err != nil {
-		panic(err)
-	}
+	n := negroni.Classic()
+	n.UseHandler(router)
+	n.Run(":" + *port)
 
 }
