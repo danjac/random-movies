@@ -23,6 +23,18 @@ type Movie struct {
 	ImdbID   string `json:"imdbID"`
 }
 
+func (m *Movie) MarshalBinary() ([]byte, error) {
+	return json.Marshal(m)
+}
+
+func (m *Movie) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, m)
+}
+
+func (m *Movie) Save(db *redis.Client) error {
+	return db.Set(m.ImdbID, m, 0).Err()
+}
+
 type MovieForm struct {
 	Title string `valid:"required"`
 }
@@ -37,19 +49,6 @@ func (f *MovieForm) Decode(r *http.Request) error {
 	}
 	return nil
 }
-
-func (m *Movie) MarshalBinary() ([]byte, error) {
-	return json.Marshal(m)
-}
-
-func (m *Movie) UnmarshalBinary(data []byte) error {
-	return json.Unmarshal(data, m)
-}
-
-func (m *Movie) Save(db *redis.Client) error {
-	return db.Set(m.ImdbID, m, 0).Err()
-}
-
 func getMovieFromOMDB(title string) (*Movie, error) {
 
 	u, _ := url.Parse("http://omdbapi.com")
