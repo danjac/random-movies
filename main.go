@@ -9,9 +9,37 @@ import (
 	"github.com/unrolled/render"
 	"gopkg.in/redis.v3"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"runtime"
 )
+
+type Logger struct {
+	Debug *log.Logger
+	Info  *log.Logger
+	Warn  *log.Logger
+	Error *log.Logger
+}
+
+func newLogger() *Logger {
+
+	flag := log.Ldate | log.Ltime | log.Lshortfile
+
+	return &Logger{
+		log.New(os.Stdout, "DEBUG: ", flag),
+		log.New(os.Stdout, "INFO: ", flag),
+		log.New(os.Stdout, "WARN: ", flag),
+		log.New(os.Stderr, "ERROR: ", flag),
+	}
+}
+
+func (l *Logger) WriteErr(w http.ResponseWriter, err error) {
+	_, fn, line, _ := runtime.Caller(1)
+	l.Error.Printf("%s:%d:%v", fn, line, err)
+	http.Error(w, "Sorry, an error has occurred", http.StatusInternalServerError)
+}
 
 type Movie struct {
 	Title    string
@@ -22,6 +50,10 @@ type Movie struct {
 	Director string
 	Rating   string `json:"imdbRating"`
 	ImdbID   string `json:"imdbID"`
+}
+
+func (m *Movie) String() string {
+	return m.Title
 }
 
 func (m *Movie) MarshalBinary() ([]byte, error) {
@@ -132,6 +164,7 @@ const (
 	staticDir    = "./dist/"
 	devServerURL = "http://localhost:8080"
 	redisAddr    = "localhost:6379"
+	serverErrMsg = "Sorry, an error has occurred"
 )
 
 func main() {
@@ -151,6 +184,7 @@ func main() {
 
 	router := mux.NewRouter()
 	render := render.New()
+	logger := newLogger()
 
 	// static content
 	router.PathPrefix(
@@ -178,7 +212,8 @@ func main() {
 	api.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		movie, err := getRandomMovie(db)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			logger.WriteErr(w, err)
+			http.Error(w, serverErrMsg, http.StatusInternalServerError)
 			return
 		}
 		if movie == nil {
@@ -191,7 +226,7 @@ func main() {
 	api.HandleFunc("/movie/{id}", func(w http.ResponseWriter, r *http.Request) {
 		movie, err := getMovie(db, mux.Vars(r)["id"])
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			logger.WriteErr(w, err)
 			return
 		}
 		if movie == nil {
@@ -203,16 +238,16 @@ func main() {
 
 	api.HandleFunc("/movie/{id}", func(w http.ResponseWriter, r *http.Request) {
 		if err := db.Del(mux.Vars(r)["id"]).Err(); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			logger.WriteErr(w, err)
 			return
 		}
-		render.Text(w, http.StatusOK, "Deleted")
+		render.Text(w, http.StatusOK, "Movie deleted")
 	}).Methods("DELETE")
 
 	api.HandleFunc("/all/", func(w http.ResponseWriter, r *http.Request) {
 		movies, err := getMovies(db)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			logger.WriteErr(w, err)
 			return
 		}
 		render.JSON(w, http.StatusOK, movies)
@@ -228,20 +263,23 @@ func main() {
 
 		movie, err := getMovieFromOMDB(f.Title)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			logger.WriteErr(w, err)
 			return
 		}
 
 		if movie.ImdbID == "" {
+			logger.Warn.Printf("No movie found for title %s", f.Title)
 			http.NotFound(w, r)
 			return
 		}
 
 		if err := movie.Save(db); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			logger.WriteErr(w, err)
 			return
 		}
+		logger.Info.Printf("New movie %s added", movie)
 		render.JSON(w, http.StatusOK, movie)
+
 	}).Methods("POST")
 
 	n := negroni.Classic()
