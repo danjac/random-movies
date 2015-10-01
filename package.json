@@ -9,8 +9,8 @@
     "dev": "WEBPACK_ENV=dev webpack-dev-server --colors --progress"
   },
   "dependencies": {
+    "axios": "^0.7.0",
     "bootstrap": "^3.3.5",
-    "isomorphic-fetch": "^2.1.1",
     "jquery": "^2.1.4",
     "lodash": "^3.10.1",
     "react": "^0.13.3",

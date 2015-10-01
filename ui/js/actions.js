@@ -5,10 +5,9 @@ import * as WebAPI from './api';
 
 export const getMovie = createAction(ActionTypes.GET_MOVIE, id => WebAPI.getMovie(id));
 
-export const addMovie = createAction(ActionTypes.ADD_MOVIE, async (id, pushState) => {
-  const result = await WebAPI.addMovie(id);
+export const addMovie = createAction(ActionTypes.ADD_MOVIE, async (title, pushState) => {
+  const result = await WebAPI.addMovie(title);
   if (result && result.imdbID) {
-    console.log("new result", result);
     pushState(null, `/movie/${result.imdbID}/`);
   }
   return result;

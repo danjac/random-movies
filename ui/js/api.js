@@ -1,34 +1,21 @@
-import fetch from 'isomorphic-fetch';
+import axios from 'axios';
 
 export function getRandomMovie() {
-  return fetch("/api/")
-    .then(response => response.json());
+  return axios.get("/api/");
 }
 
 export function getMovies() {
-  return fetch("/api/all/")
-    .then(response => response.json());
+  return axios.get("/api/all/");
 }
 
-
 export function getMovie(id) {
-  return fetch("/api/movie/" + id)
-      .then(response => response.json());
+  return axios.get(`/api/movie/${id}`);
 }
 
 export function deleteMovie(id) {
-  return fetch("/api/movie/" + id, { method: "DELETE" });
+  return axios.delete(`/api/movie/${id}`);
 }
 
 export function addMovie(title) {
-  return fetch("/api/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      title: title
-    })
-  })
-  .then(response => response.json());
+  return axios.post("/api/", { title: title });
 }

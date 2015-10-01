@@ -29,15 +29,15 @@ function mainReducer(state=initialState, action) {
     case ActionTypes.RESET_MOVIE:
       return Object.assign({}, state, { movie: null });
     case ActionTypes.GET_MOVIES:
-      return Object.assign({}, state, { movies: action.payload });
+      return Object.assign({}, state, { movies: action.payload.data });
     case ActionTypes.GET_MOVIE:
     case ActionTypes.GET_RANDOM_MOVIE:
-      return Object.assign({}, state, { movie: action.payload });
+      return Object.assign({}, state, { movie: action.payload.data });
     case ActionTypes.DELETE_MOVIE:
       return Object.assign({}, state, { messages: addMessage(state.messages, { status: "info", msg: "Your movie has been deleted"}) });
     case ActionTypes.ADD_MOVIE:
       let msg;
-      if (action.error || !action.payload.imdbID) {
+      if (action.error) {
         msg = { status: "warning", msg: "We couldn't find that movie" };
       } else {
         msg = { status: "success", msg: "Your movie has been added" };
