@@ -5,8 +5,8 @@
   "author": "Dan Jacob",
   "license": "MIT",
   "scripts": {
-    "build": "webpack -p --config=webpack.prod.config",
-    "webpack-dev-server": "webpack-dev-server --colors --progress"
+    "build": "WEBPACK_ENV=prod webpack -p",
+    "dev": "WEBPACK_ENV=dev webpack-dev-server --colors --progress"
   },
   "dependencies": {
     "bootstrap": "^3.3.5",
