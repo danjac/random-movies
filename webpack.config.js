@@ -18,10 +18,8 @@ var plugins = [
 switch(process.env.WEBPACK_ENV) {
   case 'dev':
   jsLoaders.unshift('react-hot');
-  entry.concat([
-    'webpack-dev-server/client?http://localhost:8080',
-    'webpack/hot/only-dev-server',
-  ]);
+  entry.unshift('webpack-dev-server/client?http://localhost:8080');
+  entry.unshift('webpack/hot/only-dev-server');
   plugins.unshift(new webpack.HotModuleReplacementPlugin());
   break;
   case 'prod':

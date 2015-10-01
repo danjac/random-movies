@@ -33,7 +33,7 @@ export default class Movie extends React.Component {
   }
 
   deleteMovie() {
-    this.actions.deleteMovie(this.props.params.id);
+    this.actions.deleteMovie(this.props.movie.imdbID);
     this.actions.pushState(null, "/all/");
   }
 

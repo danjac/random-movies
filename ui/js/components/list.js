@@ -45,7 +45,7 @@ export default class MovieList extends React.Component {
     const rows = _.chunk(cols, 4);
     return (
       <div>
-        <h3>Total: {movies.length}</h3>
+        <h3>Total {movies.length} movies</h3>
         {rows.map((row, index) => {
           return (
             <div key={index} className="row">
