@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
 import { Link } from 'react-router';
+import _ from 'lodash';
 
 import {
   Input,
@@ -42,6 +43,9 @@ export default class Movie extends React.Component {
     if (!movie || !movie.imdbID) {
       return <div></div>;
     }
+    const rating = this.props.movie.imdbRating ? parseFloat(this.props.movie.imdbRating) : 0;
+    const stars = Math.round(rating);
+
     return (
       <div className="row">
         <div className="col-md-3">
@@ -49,6 +53,11 @@ export default class Movie extends React.Component {
         </div>
         <div className="col-md-9">
           <h2>{movie.Title}</h2>
+          <h3>
+            {_.range(stars).map(index => <Glyphicon key={index} glyph="star" />)}
+            {_.range(10 - stars).map(index => <Glyphicon key={index} glyph="star-empty" />)}
+            &nbsp; {rating}
+          </h3>
           <dl className="dl-unstyled">
             <dt>Year</dt>
             <dd>{movie.Year}</dd>

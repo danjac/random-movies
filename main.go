@@ -20,6 +20,7 @@ type Movie struct {
 	Year     string
 	Plot     string
 	Director string
+	Rating   string `json:"imdbRating"`
 	ImdbID   string `json:"imdbID"`
 }
 
@@ -85,6 +86,9 @@ func getMovieFromOMDB(title string) (*Movie, error) {
 
 func getRandomMovie(db *redis.Client) (*Movie, error) {
 	imdbID, err := db.RandomKey().Result()
+	if err == redis.Nil {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -177,6 +181,10 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		if movie == nil {
+			http.NotFound(w, r)
+			return
+		}
 		render.JSON(w, http.StatusOK, movie)
 	}).Methods("GET")
 
@@ -221,6 +229,11 @@ func main() {
 		movie, err := getMovieFromOMDB(f.Title)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if movie.ImdbID == "" {
+			http.NotFound(w, r)
 			return
 		}
 
