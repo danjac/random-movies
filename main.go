@@ -40,15 +40,21 @@ type MovieForm struct {
 }
 
 func (f *MovieForm) Decode(r *http.Request) error {
+	return decode(r, f)
+}
+
+// decodes JSON body of request and runs through validator
+func decode(r *http.Request, data interface{}) error {
 	defer r.Body.Close()
-	if err := json.NewDecoder(r.Body).Decode(f); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
 		return err
 	}
-	if _, err := govalidator.ValidateStruct(f); err != nil {
+	if _, err := govalidator.ValidateStruct(data); err != nil {
 		return err
 	}
 	return nil
 }
+
 func getMovieFromOMDB(title string) (*Movie, error) {
 
 	u, _ := url.Parse("http://omdbapi.com")
@@ -117,12 +123,19 @@ var (
 	port = flag.String("port", "4000", "server port")
 )
 
+const (
+	staticURL    = "/static/"
+	staticDir    = "./dist/"
+	devServerURL = "http://localhost:8080"
+	redisAddr    = "localhost:6379"
+)
+
 func main() {
 
 	flag.Parse()
 
 	db := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     redisAddr,
 		Password: "",
 		DB:       0,
 	})
@@ -136,13 +149,15 @@ func main() {
 	render := render.New()
 
 	// static content
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./dist/"))))
+	router.PathPrefix(
+		staticURL).Handler(http.StripPrefix(
+		staticURL, http.FileServer(http.Dir(staticDir))))
 
 	// index page
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var staticHost string
 		if *env == "dev" {
-			staticHost = "http://localhost:8080"
+			staticHost = devServerURL
 		}
 
 		ctx := map[string]string{
