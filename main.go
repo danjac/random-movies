@@ -164,7 +164,6 @@ const (
 	staticDir    = "./dist/"
 	devServerURL = "http://localhost:8080"
 	redisAddr    = "localhost:6379"
-	serverErrMsg = "Sorry, an error has occurred"
 )
 
 func main() {
@@ -213,7 +212,6 @@ func main() {
 		movie, err := getRandomMovie(db)
 		if err != nil {
 			logger.WriteErr(w, err)
-			http.Error(w, serverErrMsg, http.StatusInternalServerError)
 			return
 		}
 		if movie == nil {

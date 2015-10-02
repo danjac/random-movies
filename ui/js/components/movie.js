@@ -17,12 +17,7 @@ import { pushState } from 'redux-router';
 
 import * as actions from '../actions';
 
-@connect(state => {
-  return {
-    movie: state.main.movie,
-  };
-})
-export default class Movie extends React.Component {
+export class Movie extends React.Component {
 
   static propTypes = {
     dispatch: PropTypes.func.isRequired
@@ -79,4 +74,8 @@ export default class Movie extends React.Component {
 
 }
 
-
+export default connect(state => {
+  return {
+    movie: state.main.movie,
+  };
+})(Movie);
