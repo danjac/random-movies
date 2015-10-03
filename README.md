@@ -1,2 +1,2 @@
 # random-movies
-Playing around with mithril
+Playing around with react
