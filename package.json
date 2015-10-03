@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build": "WEBPACK_ENV=prod webpack -p",
-    "dev": "WEBPACK_ENV=dev webpack --watch --inline --colors --progress",
+    "dev": "WEBPACK_ENV=dev webpack-dev-server --inline --colors --progress",
     "test": "mocha --opts ./test/mocha.opts --compilers js:babel/register --recursive ./test/**/*.js"
   },
   "dependencies": {

@@ -34,7 +34,7 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'dist'),
     filename: "[name].js",
-    publicPath: '/static/'
+    publicPath: 'http://localhost:8080/static/'
   },
   plugins: plugins,
   module: {

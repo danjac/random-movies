@@ -52,10 +52,14 @@ export default class App extends React.Component {
   renderForm() {
     return (
       <form className="form form-horizontal" onSubmit={this.addMovie.bind(this)}>
-        <Input type="text"
-                ref="title"
-                placeholder="Add another title" />
-              <Button bsStyle="primary" type="submit"><Glyphicon glyph="plus" /> Add</Button>
+        <Input
+          type="text"
+          ref="title"
+          placeholder="Add another title" />
+        <Button
+          bsStyle="primary"
+          className="form-control"
+          type="submit"><Glyphicon glyph="plus" /> Add</Button>
         </form>
     );
   }

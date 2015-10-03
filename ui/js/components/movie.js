@@ -51,7 +51,7 @@ export class Movie extends React.Component {
           <h3>
             {_.range(stars).map(index => <Glyphicon key={index} glyph="star" />)}
             {_.range(10 - stars).map(index => <Glyphicon key={index} glyph="star-empty" />)}
-            &nbsp; {rating}
+            &nbsp; {rating} <small>IMDB</small>
           </h3>
           <dl className="dl-unstyled">
             <dt>Year</dt>
@@ -63,7 +63,7 @@ export class Movie extends React.Component {
           </dl>
           <p className="well">{movie.Plot}</p>
           <ButtonGroup>
-          <Button bsStyle="primary" onClick={this.actions.getRandomMovie.bind(this)}><Glyphicon glyph="random" /> Get another</Button>
+            <Button bsStyle="primary" onClick={this.actions.getRandomMovie.bind(this)}><Glyphicon glyph="random" /> Random</Button>
           <Link className="btn btn-default" to="/all/"><Glyphicon glyph="list" /> See all</Link>
           <Button bsStyle="danger" onClick={this.deleteMovie.bind(this)}><Glyphicon glyph="trash" /> Delete</Button>
           </ButtonGroup>
