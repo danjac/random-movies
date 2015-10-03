@@ -1,8 +1,5 @@
-var Movie = require('./movie');
-var MovieList = require('./list');
-var Page = require('./page');
+import Movie from './movie';
+import MovieList from './list';
+import App from './app';
 
-module.exports = {
-  Movie: Page(Movie),
-  MovieList: Page(MovieList)
-};
+export { Movie, MovieList, App };

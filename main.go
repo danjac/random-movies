@@ -3,13 +3,43 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"github.com/gin-gonic/contrib/static"
-	"github.com/gin-gonic/gin"
+	"github.com/asaskevich/govalidator"
+	"github.com/codegangsta/negroni"
+	"github.com/gorilla/mux"
+	"github.com/unrolled/render"
 	"gopkg.in/redis.v3"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"runtime"
 )
+
+type Logger struct {
+	Debug *log.Logger
+	Info  *log.Logger
+	Warn  *log.Logger
+	Error *log.Logger
+}
+
+func newLogger() *Logger {
+
+	flag := log.Ldate | log.Ltime | log.Lshortfile
+
+	return &Logger{
+		log.New(os.Stdout, "DEBUG: ", flag),
+		log.New(os.Stdout, "INFO: ", flag),
+		log.New(os.Stdout, "WARN: ", flag),
+		log.New(os.Stderr, "ERROR: ", flag),
+	}
+}
+
+func (l *Logger) WriteErr(w http.ResponseWriter, err error) {
+	_, fn, line, _ := runtime.Caller(1)
+	l.Error.Printf("%s:%d:%v", fn, line, err)
+	http.Error(w, "Sorry, an error has occurred", http.StatusInternalServerError)
+}
 
 type Movie struct {
 	Title    string
@@ -18,7 +48,12 @@ type Movie struct {
 	Year     string
 	Plot     string
 	Director string
+	Rating   string `json:"imdbRating"`
 	ImdbID   string `json:"imdbID"`
+}
+
+func (m *Movie) String() string {
+	return m.Title
 }
 
 func (m *Movie) MarshalBinary() ([]byte, error) {
@@ -31,6 +66,26 @@ func (m *Movie) UnmarshalBinary(data []byte) error {
 
 func (m *Movie) Save(db *redis.Client) error {
 	return db.Set(m.ImdbID, m, 0).Err()
+}
+
+type MovieForm struct {
+	Title string `valid:"required"`
+}
+
+func (f *MovieForm) Decode(r *http.Request) error {
+	return decode(r, f)
+}
+
+// decodes JSON body of request and runs through validator
+func decode(r *http.Request, data interface{}) error {
+	defer r.Body.Close()
+	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
+		return err
+	}
+	if _, err := govalidator.ValidateStruct(data); err != nil {
+		return err
+	}
+	return nil
 }
 
 func getMovieFromOMDB(title string) (*Movie, error) {
@@ -63,6 +118,9 @@ func getMovieFromOMDB(title string) (*Movie, error) {
 
 func getRandomMovie(db *redis.Client) (*Movie, error) {
 	imdbID, err := db.RandomKey().Result()
+	if err == redis.Nil {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -101,12 +159,19 @@ var (
 	port = flag.String("port", "4000", "server port")
 )
 
+const (
+	staticURL    = "/static/"
+	staticDir    = "./dist/"
+	devServerURL = "http://localhost:8080"
+	redisAddr    = "localhost:6379"
+)
+
 func main() {
 
 	flag.Parse()
 
 	db := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     redisAddr,
 		Password: "",
 		DB:       0,
 	})
@@ -116,82 +181,107 @@ func main() {
 		panic(err)
 	}
 
-	r := gin.Default()
+	router := mux.NewRouter()
+	render := render.New()
+	logger := newLogger()
 
-	r.Use(static.Serve("/static", static.LocalFile("static", true)))
-	r.LoadHTMLGlob("templates/*")
+	// static content
+	router.PathPrefix(
+		staticURL).Handler(http.StripPrefix(
+		staticURL, http.FileServer(http.Dir(staticDir))))
 
-	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", gin.H{"env": *env})
+	// index page
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		var staticHost string
+		if *env == "dev" {
+			staticHost = devServerURL
+		}
+
+		ctx := map[string]string{
+			"staticHost": staticHost,
+			"env":        *env,
+		}
+
+		render.HTML(w, http.StatusOK, "index", ctx)
 	})
 
-	api := r.Group("/api/")
+	// API calls
+	api := router.PathPrefix("/api/").Subrouter()
 
-	api.GET("/", func(c *gin.Context) {
+	api.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		movie, err := getRandomMovie(db)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-		c.JSON(http.StatusOK, movie)
-	})
-
-	api.GET("/movie/:id", func(c *gin.Context) {
-		movie, err := getMovie(db, c.Param("id"))
-		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			logger.WriteErr(w, err)
 			return
 		}
 		if movie == nil {
-			c.AbortWithStatus(http.StatusNotFound)
+			http.NotFound(w, r)
 			return
 		}
-		c.JSON(http.StatusOK, movie)
-	})
+		render.JSON(w, http.StatusOK, movie)
+	}).Methods("GET")
 
-	api.DELETE("/movie/:id", func(c *gin.Context) {
-		if err := db.Del(c.Param("id")).Err(); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+	api.HandleFunc("/movie/{id}", func(w http.ResponseWriter, r *http.Request) {
+		movie, err := getMovie(db, mux.Vars(r)["id"])
+		if err != nil {
+			logger.WriteErr(w, err)
 			return
 		}
-		c.String(http.StatusOK, "Deleted")
-	})
+		if movie == nil {
+			http.NotFound(w, r)
+			return
+		}
+		render.JSON(w, http.StatusOK, movie)
+	}).Methods("GET")
 
-	api.GET("/all", func(c *gin.Context) {
+	api.HandleFunc("/movie/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if err := db.Del(mux.Vars(r)["id"]).Err(); err != nil {
+			logger.WriteErr(w, err)
+			return
+		}
+		render.Text(w, http.StatusOK, "Movie deleted")
+	}).Methods("DELETE")
+
+	api.HandleFunc("/all/", func(w http.ResponseWriter, r *http.Request) {
 		movies, err := getMovies(db)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			logger.WriteErr(w, err)
 			return
 		}
-		c.JSON(http.StatusOK, movies)
-	})
+		render.JSON(w, http.StatusOK, movies)
+	}).Methods("GET")
 
-	api.POST("/", func(c *gin.Context) {
+	api.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
-		s := &struct {
-			Title string `json:"title", binding:"required"`
-		}{}
-
-		if err := c.Bind(s); err != nil || s.Title == "" {
-			c.AbortWithStatus(http.StatusBadRequest)
+		f := &MovieForm{}
+		if err := f.Decode(r); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		movie, err := getMovieFromOMDB(s.Title)
+
+		movie, err := getMovieFromOMDB(f.Title)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			logger.WriteErr(w, err)
 			return
 		}
-		if movie.Title != "" {
-			if err := movie.Save(db); err != nil {
-				c.AbortWithError(http.StatusInternalServerError, err)
-				return
-			}
-		}
-		c.JSON(http.StatusOK, movie)
-	})
 
-	if err := r.Run(":" + *port); err != nil {
-		panic(err)
-	}
+		if movie.ImdbID == "" {
+			logger.Warn.Printf("No movie found for title %s", f.Title)
+			http.NotFound(w, r)
+			return
+		}
+
+		if err := movie.Save(db); err != nil {
+			logger.WriteErr(w, err)
+			return
+		}
+		logger.Info.Printf("New movie %s added", movie)
+		render.JSON(w, http.StatusOK, movie)
+
+	}).Methods("POST")
+
+	n := negroni.Classic()
+	n.UseHandler(router)
+	n.Run(":" + *port)
 
 }

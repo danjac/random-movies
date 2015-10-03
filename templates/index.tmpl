@@ -1,0 +1,14 @@
+<html>
+	<head>
+        <title>Random movie {{ .env }}</title>
+        <link rel="stylesheet" href="{{ .staticHost }}/static/main.css">
+    </head>
+	<body>
+    </body>
+    <script>
+    window.__ENV__ = "{{ .env }}";
+    </script>
+    <script src="{{ .staticHost }}/static/main.js"></script>
+
+
+</html>

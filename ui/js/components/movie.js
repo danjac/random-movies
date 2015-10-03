@@ -1,93 +1,81 @@
-var m = require('mithril');
-var _ = require('lodash');
+import React, { PropTypes } from 'react';
+import { Link } from 'react-router';
+import _ from 'lodash';
 
-var Movie = require('../model').Movie;
-var buttonLabel = require('./widgets').buttonLabel;
+import {
+  Input,
+  Button,
+  ButtonInput,
+  ButtonGroup,
+  Glyphicon
+} from 'react-bootstrap';
 
-module.exports = {
+import { bindActionCreators } from 'redux';
 
-  controller: function(args){
+import { connect } from 'react-redux';
+import { pushState } from 'redux-router';
 
-    var movie = m.prop({});
+import * as actions from '../actions';
 
-    function nextMovie(e) {
-      e.preventDefault();
-      Movie.getRandom().then(movie);
-    }
+export class Movie extends React.Component {
 
-    function deleteMovie(e) {
-      e.preventDefault();
-      var mv = movie();
-      if (window.confirm("Are you sure you want to remove \"" + mv.Title + "\"?")) {
-      Movie.deleteMovie(mv.imdbID).then(function() {
-          args.parent.flash("info", "\"" + mv.Title + "\" has been deleted");
-          m.route("/titles/");
-      });
-      }
-    }
-
-    var imdbID = m.route.param("id");
-
-    if (imdbID) {
-      Movie.getMovie(imdbID).then(movie);
-    } else {
-      Movie.getRandom().then(movie);
-    }
-
-    return {
-      movie: movie,
-      nextMovie: nextMovie,
-      deleteMovie: deleteMovie
-    };
-  },
-
-  view: function(ctrl) {
-    var movie = ctrl.movie();
-
-    function showButtons() {
-      var buttons = [
-        m("button.btn.btn-primary", {onclick: ctrl.nextMovie}, buttonLabel("random", "Show me another")),
-        m("a.btn.btn-default[href=#/titles]", buttonLabel("list", "See all titles")),
-      ];
-      if (movie.imdbID) {
-        buttons.push(m("a.btn.btn-danger", {onclick: ctrl.deleteMovie}, buttonLabel("trash", "Remove this movie")));
-      }
-
-      return m("div.btn-group", buttons);
-    }
-
-    function showPoster() {
-      if (movie.Poster == 'N/A') {
-        return m("b", "No poster available");
-      }
-      return m("a[target=_blank]", {href: imdbURL},  m("img.img-responsive", {src: movie.Poster}));
-    }
-
-    if (!movie || !movie.Title || !movie.Poster) {
-      return showButtons();
-    }
-
-    var imdbURL = "http://www.imdb.com/title/" +  movie.imdbID + "/";
-
-    return m("div.row", [
-      m("div.col-md-3", [
-        showPoster()
-      ]),
-      m("div.col-md-9", [
-        m("h2", m("a[target=_blank]", {href: imdbURL}, movie.Title)),
-        m("dl.dl-unstyled", [
-          m("dt", "Year"),
-          m("dd", movie.Year),
-          m("dt", "Actors"),
-          m("dd", movie.Actors),
-          m("dt", "Director"),
-          m("dd", movie.Director),
-        ]),
-        m("p.well", movie.Plot),
-        showButtons()
-      ])
-    ]);
+  static propTypes = {
+    dispatch: PropTypes.func.isRequired
   }
-};
 
+  constructor(props) {
+    super(props);
+    this.actions = bindActionCreators({ pushState, ...actions}, this.props.dispatch);
+  }
 
+  deleteMovie() {
+    this.actions.deleteMovie(this.props.movie.imdbID);
+    this.actions.pushState(null, "/all/");
+  }
+
+  render() {
+    const movie = this.props.movie;
+    if (!movie || !movie.imdbID) {
+      return <div></div>;
+    }
+    const rating = this.props.movie.imdbRating ? parseFloat(this.props.movie.imdbRating) : 0;
+    const stars = Math.round(rating);
+
+    return (
+      <div className="row">
+        <div className="col-md-3">
+          {movie.Poster === 'N/A'? 'No poster available' : <img className="img-responsive" src={movie.Poster} alt={movie.Title} />}
+        </div>
+        <div className="col-md-9">
+          <h2>{movie.Title}</h2>
+          <h3>
+            {_.range(stars).map(index => <Glyphicon key={index} glyph="star" />)}
+            {_.range(10 - stars).map(index => <Glyphicon key={index} glyph="star-empty" />)}
+            &nbsp; {rating} <small>IMDB</small>
+          </h3>
+          <dl className="dl-unstyled">
+            <dt>Year</dt>
+            <dd>{movie.Year}</dd>
+            <dt>Actors</dt>
+            <dd>{movie.Actors}</dd>
+            <dt>Director</dt>
+            <dd>{movie.Director}</dd>
+          </dl>
+          <p className="well">{movie.Plot}</p>
+          <ButtonGroup>
+            <Button bsStyle="primary" onClick={this.actions.getRandomMovie.bind(this)}><Glyphicon glyph="random" /> Random</Button>
+          <Link className="btn btn-default" to="/all/"><Glyphicon glyph="list" /> See all</Link>
+          <Button bsStyle="danger" onClick={this.deleteMovie.bind(this)}><Glyphicon glyph="trash" /> Delete</Button>
+          </ButtonGroup>
+        </div>
+      </div>
+    );
+  }
+
+}
+
+export default connect(state => {
+  return {
+    movie: state.main.movie,
+  };
+})(Movie);
