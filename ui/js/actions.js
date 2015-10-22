@@ -13,7 +13,7 @@ export const addMovie = createAction(ActionTypes.ADD_MOVIE, async (title, pushSt
   return result;
 });
 
-export const dismissMessage = createAction(ActionTypes.DISMISS_MESSAGE, index => index);
+export const dismissMessage = createAction(ActionTypes.DISMISS_MESSAGE);
 
 export const resetMovie = createAction(ActionTypes.RESET_MOVIE);
 

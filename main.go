@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"github.com/asaskevich/govalidator"
 	"github.com/codegangsta/negroni"
@@ -74,6 +75,54 @@ type MovieForm struct {
 
 func (f *MovieForm) Decode(r *http.Request) error {
 	return decode(r, f)
+}
+
+type Error interface {
+	error
+	Status() int
+}
+
+type HTTPError struct {
+	Code int
+	Err  error
+}
+
+func (e HTTPError) Error() string {
+	return e.Err.Error()
+}
+
+func (e HTTPError) Status() int {
+	return e.Code
+}
+
+var errHTTPNotFound = HTTPError{http.StatusNotFound, errors.New("Not found")}
+
+type Env struct {
+	*render.Render
+	DB  *redis.Client
+	Log *Logger
+}
+
+type HandlerFunc func(e *Env, w http.ResponseWriter, r *http.Request) error
+
+type Handler struct {
+	*Env
+	H HandlerFunc
+}
+
+func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	err := h.H(h.Env, w, r)
+	if err != nil {
+		switch e := err.(type) {
+		case Error:
+			h.Env.Log.Error.Printf("HTTP %d: %s", e.Status(), e)
+			http.Error(w, e.Error(), e.Status())
+		default:
+			_, fn, line, _ := runtime.Caller(1)
+			h.Env.Log.Error.Printf("%s:%d:%v", fn, line, err)
+			http.Error(w, "Sorry, an error occurred", http.StatusInternalServerError)
+		}
+	}
 }
 
 // decodes JSON body of request and runs through validator
@@ -208,77 +257,73 @@ func main() {
 	// API calls
 	api := router.PathPrefix("/api/").Subrouter()
 
-	api.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		movie, err := getRandomMovie(db)
+	e := &Env{render, db, logger}
+
+	api.Handle("/", Handler{e, func(e *Env, w http.ResponseWriter, r *http.Request) error {
+		movie, err := getRandomMovie(e.DB)
 		if err != nil {
-			logger.WriteErr(w, err)
-			return
+			return err
 		}
 		if movie == nil {
-			http.NotFound(w, r)
-			return
+			return errHTTPNotFound
 		}
-		render.JSON(w, http.StatusOK, movie)
-	}).Methods("GET")
+		e.JSON(w, http.StatusOK, movie)
+		return nil
+	}}).Methods("GET")
 
-	api.HandleFunc("/movie/{id}", func(w http.ResponseWriter, r *http.Request) {
-		movie, err := getMovie(db, mux.Vars(r)["id"])
+	api.Handle("/movie/{id}", Handler{e, func(e *Env, w http.ResponseWriter, r *http.Request) error {
+		movie, err := getMovie(e.DB, mux.Vars(r)["id"])
 		if err != nil {
-			logger.WriteErr(w, err)
-			return
+			return err
 		}
 		if movie == nil {
-			http.NotFound(w, r)
-			return
+			return errHTTPNotFound
 		}
-		render.JSON(w, http.StatusOK, movie)
-	}).Methods("GET")
+		e.JSON(w, http.StatusOK, movie)
+		return nil
+	}}).Methods("GET")
 
-	api.HandleFunc("/movie/{id}", func(w http.ResponseWriter, r *http.Request) {
+	api.Handle("/movie/{id}", Handler{e, func(e *Env, w http.ResponseWriter, r *http.Request) error {
 		if err := db.Del(mux.Vars(r)["id"]).Err(); err != nil {
-			logger.WriteErr(w, err)
-			return
+			return err
 		}
-		render.Text(w, http.StatusOK, "Movie deleted")
-	}).Methods("DELETE")
+		e.Text(w, http.StatusOK, "Movie deleted")
+		return nil
+	}}).Methods("DELETE")
 
-	api.HandleFunc("/all/", func(w http.ResponseWriter, r *http.Request) {
-		movies, err := getMovies(db)
+	api.Handle("/all/", Handler{e, func(e *Env, w http.ResponseWriter, r *http.Request) error {
+		movies, err := getMovies(e.DB)
 		if err != nil {
-			logger.WriteErr(w, err)
-			return
+			return err
 		}
-		render.JSON(w, http.StatusOK, movies)
-	}).Methods("GET")
+		e.JSON(w, http.StatusOK, movies)
+		return nil
+	}}).Methods("GET")
 
-	api.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	api.Handle("/", Handler{e, func(e *Env, w http.ResponseWriter, r *http.Request) error {
 
 		f := &MovieForm{}
 		if err := f.Decode(r); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+			return HTTPError{http.StatusBadRequest, err}
 		}
 
 		movie, err := getMovieFromOMDB(f.Title)
 		if err != nil {
-			logger.WriteErr(w, err)
-			return
+			return err
 		}
 
 		if movie.ImdbID == "" {
-			logger.Warn.Printf("No movie found for title %s", f.Title)
-			http.NotFound(w, r)
-			return
+			return errHTTPNotFound
 		}
 
-		if err := movie.Save(db); err != nil {
-			logger.WriteErr(w, err)
-			return
+		if err := movie.Save(e.DB); err != nil {
+			return err
 		}
 		logger.Info.Printf("New movie %s added", movie)
-		render.JSON(w, http.StatusOK, movie)
+		e.JSON(w, http.StatusOK, movie)
+		return nil
 
-	}).Methods("POST")
+	}}).Methods("POST")
 
 	n := negroni.Classic()
 	n.UseHandler(router)

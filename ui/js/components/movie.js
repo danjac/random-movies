@@ -51,7 +51,7 @@ export class Movie extends React.Component {
           <h3>
             {_.range(stars).map(index => <Glyphicon key={index} glyph="star" />)}
             {_.range(10 - stars).map(index => <Glyphicon key={index} glyph="star-empty" />)}
-            &nbsp; {rating} <a target="_blank" href={`http://www.imdb.com/title/${movie.imdbID}/?ref_=fn_al_tt_1`}><small>IMDB</small></a>
+            &nbsp; {rating} <a target="_blank" href={`http://www.imdb.com/title/${movie.imdbID}/`}><small>IMDB</small></a>
           </h3>
           <dl className="dl-unstyled">
             <dt>Year</dt>
