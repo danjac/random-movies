@@ -36,10 +36,70 @@ func newLogger() *Logger {
 	}
 }
 
-func (l *Logger) WriteErr(w http.ResponseWriter, err error) {
-	_, fn, line, _ := runtime.Caller(1)
-	l.Error.Printf("%s:%d:%v", fn, line, err)
-	http.Error(w, "Sorry, an error has occurred", http.StatusInternalServerError)
+func getRandomMovie(e *Env, w http.ResponseWriter, r *http.Request) error {
+	movie, err := e.DB.GetRandomMovie()
+	if err != nil {
+		return err
+	}
+	if movie == nil {
+		return errHTTPNotFound
+	}
+	e.JSON(w, http.StatusOK, movie)
+	return nil
+}
+
+func getMovie(e *Env, w http.ResponseWriter, r *http.Request) error {
+	movie, err := e.DB.GetMovie(mux.Vars(r)["id"])
+	if err != nil {
+		return err
+	}
+	if movie == nil {
+		return errHTTPNotFound
+	}
+	e.JSON(w, http.StatusOK, movie)
+	return nil
+}
+
+func deleteMovie(e *Env, w http.ResponseWriter, r *http.Request) error {
+	if err := e.DB.Del(mux.Vars(r)["id"]).Err(); err != nil {
+		return err
+	}
+	e.Text(w, http.StatusOK, "Movie deleted")
+	return nil
+}
+
+func getMovies(e *Env, w http.ResponseWriter, r *http.Request) error {
+	movies, err := e.DB.GetMovies()
+	if err != nil {
+		return err
+	}
+	e.JSON(w, http.StatusOK, movies)
+	return nil
+}
+
+func addMovie(e *Env, w http.ResponseWriter, r *http.Request) error {
+
+	f := &MovieForm{}
+	if err := f.Decode(r); err != nil {
+		return HTTPError{http.StatusBadRequest, err}
+	}
+
+	movie, err := getMovieFromOMDB(f.Title)
+	if err != nil {
+		return err
+	}
+
+	if movie.ImdbID == "" {
+		return errHTTPNotFound
+	}
+
+	if err := movie.Save(e.DB); err != nil {
+		return err
+	}
+	e.Log.Info.Printf("New movie %s added", movie)
+	e.JSON(w, http.StatusOK, movie)
+	return nil
+
 }
 
 type Movie struct {
@@ -65,7 +125,7 @@ func (m *Movie) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, m)
 }
 
-func (m *Movie) Save(db *redis.Client) error {
+func (m *Movie) Save(db *DB) error {
 	return db.Set(m.ImdbID, m, 0).Err()
 }
 
@@ -99,8 +159,12 @@ var errHTTPNotFound = HTTPError{http.StatusNotFound, errors.New("Not found")}
 
 type Env struct {
 	*render.Render
-	DB  *redis.Client
+	DB  *DB
 	Log *Logger
+}
+
+func (e *Env) Handler(fn HandlerFunc) Handler {
+	return Handler{e, fn}
 }
 
 type HandlerFunc func(e *Env, w http.ResponseWriter, r *http.Request) error
@@ -165,7 +229,11 @@ func getMovieFromOMDB(title string) (*Movie, error) {
 	return movie, nil
 }
 
-func getRandomMovie(db *redis.Client) (*Movie, error) {
+type DB struct {
+	*redis.Client
+}
+
+func (db *DB) GetRandomMovie() (*Movie, error) {
 	imdbID, err := db.RandomKey().Result()
 	if err == redis.Nil {
 		return nil, nil
@@ -173,10 +241,10 @@ func getRandomMovie(db *redis.Client) (*Movie, error) {
 	if err != nil {
 		return nil, err
 	}
-	return getMovie(db, imdbID)
+	return db.GetMovie(imdbID)
 }
 
-func getMovie(db *redis.Client, imdbID string) (*Movie, error) {
+func (db *DB) GetMovie(imdbID string) (*Movie, error) {
 	movie := &Movie{}
 	if err := db.Get(imdbID).Scan(movie); err != nil {
 		if err == redis.Nil {
@@ -188,7 +256,7 @@ func getMovie(db *redis.Client, imdbID string) (*Movie, error) {
 	return movie, nil
 }
 
-func getMovies(db *redis.Client) ([]*Movie, error) {
+func (db *DB) GetMovies() ([]*Movie, error) {
 	result := db.Keys("*")
 	if err := result.Err(); err != nil {
 		return nil, err
@@ -219,11 +287,11 @@ func main() {
 
 	flag.Parse()
 
-	db := redis.NewClient(&redis.Options{
+	db := &DB{redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
 		Password: "",
 		DB:       0,
-	})
+	})}
 
 	_, err := db.Ping().Result()
 	if err != nil {
@@ -259,71 +327,11 @@ func main() {
 
 	e := &Env{render, db, logger}
 
-	api.Handle("/", Handler{e, func(e *Env, w http.ResponseWriter, r *http.Request) error {
-		movie, err := getRandomMovie(e.DB)
-		if err != nil {
-			return err
-		}
-		if movie == nil {
-			return errHTTPNotFound
-		}
-		e.JSON(w, http.StatusOK, movie)
-		return nil
-	}}).Methods("GET")
-
-	api.Handle("/movie/{id}", Handler{e, func(e *Env, w http.ResponseWriter, r *http.Request) error {
-		movie, err := getMovie(e.DB, mux.Vars(r)["id"])
-		if err != nil {
-			return err
-		}
-		if movie == nil {
-			return errHTTPNotFound
-		}
-		e.JSON(w, http.StatusOK, movie)
-		return nil
-	}}).Methods("GET")
-
-	api.Handle("/movie/{id}", Handler{e, func(e *Env, w http.ResponseWriter, r *http.Request) error {
-		if err := db.Del(mux.Vars(r)["id"]).Err(); err != nil {
-			return err
-		}
-		e.Text(w, http.StatusOK, "Movie deleted")
-		return nil
-	}}).Methods("DELETE")
-
-	api.Handle("/all/", Handler{e, func(e *Env, w http.ResponseWriter, r *http.Request) error {
-		movies, err := getMovies(e.DB)
-		if err != nil {
-			return err
-		}
-		e.JSON(w, http.StatusOK, movies)
-		return nil
-	}}).Methods("GET")
-
-	api.Handle("/", Handler{e, func(e *Env, w http.ResponseWriter, r *http.Request) error {
-
-		f := &MovieForm{}
-		if err := f.Decode(r); err != nil {
-			return HTTPError{http.StatusBadRequest, err}
-		}
-
-		movie, err := getMovieFromOMDB(f.Title)
-		if err != nil {
-			return err
-		}
-
-		if movie.ImdbID == "" {
-			return errHTTPNotFound
-		}
-
-		if err := movie.Save(e.DB); err != nil {
-			return err
-		}
-		logger.Info.Printf("New movie %s added", movie)
-		e.JSON(w, http.StatusOK, movie)
-		return nil
-
-	}}).Methods("POST")
+	api.Handle("/", e.Handler(getRandomMovie)).Methods("GET")
+	api.Handle("/", e.Handler(addMovie)).Methods("POST")
+	api.Handle("/movie/{id}", e.Handler(getMovie)).Methods("GET")
+	api.Handle("/movie/{id}", e.Handler(deleteMovie)).Methods("DELETE")
+	api.Handle("/all/", e.Handler(getMovies)).Methods("GET")
 
 	n := negroni.Classic()
 	n.UseHandler(router)
