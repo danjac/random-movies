@@ -94,8 +94,9 @@ var errHTTPNotFound = HTTPError{http.StatusNotFound, errors.New("Not found")}
 type HandlerFunc func(c *AppContext, w http.ResponseWriter, r *http.Request) error
 
 type AppContext struct {
-	Render *render.Render
+	Env    string
 	DB     *DB
+	Render *render.Render
 	Log    *Logger
 }
 
@@ -121,6 +122,21 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Sorry, an error occurred", http.StatusInternalServerError)
 		}
 	}
+}
+
+func indexPage(c *AppContext, w http.ResponseWriter, r *http.Request) error {
+	var staticHost string
+	if c.Env == "dev" {
+		staticHost = devServerURL
+	}
+
+	ctx := map[string]string{
+		"staticHost": staticHost,
+		"env":        c.Env,
+	}
+
+	c.Render.HTML(w, http.StatusOK, "index", ctx)
+	return nil
 }
 
 func getRandomMovie(c *AppContext, w http.ResponseWriter, r *http.Request) error {
@@ -297,9 +313,14 @@ func main() {
 		panic(err)
 	}
 
+	c := &AppContext{
+		*env,
+		db,
+		render.New(),
+		newLogger(),
+	}
+
 	router := mux.NewRouter()
-	render := render.New()
-	logger := newLogger()
 
 	// static content
 	router.PathPrefix(
@@ -307,24 +328,10 @@ func main() {
 		staticURL, http.FileServer(http.Dir(staticDir))))
 
 	// index page
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		var staticHost string
-		if *env == "dev" {
-			staticHost = devServerURL
-		}
-
-		ctx := map[string]string{
-			"staticHost": staticHost,
-			"env":        *env,
-		}
-
-		render.HTML(w, http.StatusOK, "index", ctx)
-	})
+	router.Handle("/", c.NewHandler(indexPage)).Methods("GET")
 
 	// API calls
 	api := router.PathPrefix("/api/").Subrouter()
-
-	c := &AppContext{render, db, logger}
 
 	api.Handle("/", c.NewHandler(getRandomMovie)).Methods("GET")
 	api.Handle("/", c.NewHandler(addMovie)).Methods("POST")
