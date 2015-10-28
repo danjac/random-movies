@@ -25,7 +25,7 @@ type Logger struct {
 	Error *log.Logger
 }
 
-func (log *Logger) Handle(w http.ResponseWriter, r *http.Request, err error) {
+func (log *Logger) Handle(w http.ResponseWriter, err error) {
 	switch e := err.(error).(type) {
 	case Error:
 		log.Error.Printf("HTTP %d: %s", e.Status(), e)
@@ -135,11 +135,11 @@ func getRandomMovie(w http.ResponseWriter, r *http.Request) {
 	c := getAppContext(r)
 	movie, err := c.DB.GetRandomMovie()
 	if err != nil {
-		c.Log.Handle(w, r, err)
+		c.Log.Handle(w, err)
 		return
 	}
 	if movie == nil {
-		c.Log.Handle(w, r, errHTTPNotFound)
+		c.Log.Handle(w, errHTTPNotFound)
 		return
 	}
 	c.Render.JSON(w, http.StatusOK, movie)
@@ -149,11 +149,11 @@ func getMovie(w http.ResponseWriter, r *http.Request) {
 	c := getAppContext(r)
 	movie, err := c.DB.GetMovie(mux.Vars(r)["id"])
 	if err != nil {
-		c.Log.Handle(w, r, err)
+		c.Log.Handle(w, err)
 		return
 	}
 	if movie == nil {
-		c.Log.Handle(w, r, errHTTPNotFound)
+		c.Log.Handle(w, errHTTPNotFound)
 		return
 	}
 	c.Render.JSON(w, http.StatusOK, movie)
@@ -162,7 +162,7 @@ func getMovie(w http.ResponseWriter, r *http.Request) {
 func deleteMovie(w http.ResponseWriter, r *http.Request) {
 	c := getAppContext(r)
 	if err := c.DB.Del(mux.Vars(r)["id"]).Err(); err != nil {
-		c.Log.Handle(w, r, err)
+		c.Log.Handle(w, err)
 		return
 	}
 	c.Render.Text(w, http.StatusOK, "Movie deleted")
@@ -172,7 +172,7 @@ func getMovies(w http.ResponseWriter, r *http.Request) {
 	c := getAppContext(r)
 	movies, err := c.DB.GetMovies()
 	if err != nil {
-		c.Log.Handle(w, r, err)
+		c.Log.Handle(w, err)
 		return
 	}
 	c.Render.JSON(w, http.StatusOK, movies)
@@ -182,23 +182,23 @@ func addMovie(w http.ResponseWriter, r *http.Request) {
 	c := getAppContext(r)
 	f := &MovieForm{}
 	if err := f.Decode(r); err != nil {
-		c.Log.Handle(w, r, HTTPError{http.StatusBadRequest, err})
+		c.Log.Handle(w, HTTPError{http.StatusBadRequest, err})
 		return
 	}
 
 	movie, err := getMovieFromOMDB(f.Title)
 	if err != nil {
-		c.Log.Handle(w, r, err)
+		c.Log.Handle(w, err)
 		return
 	}
 
 	if movie.ImdbID == "" {
-		c.Log.Handle(w, r, errHTTPNotFound)
+		c.Log.Handle(w, errHTTPNotFound)
 		return
 	}
 
 	if err := movie.Save(c.DB); err != nil {
-		c.Log.Handle(w, r, err)
+		c.Log.Handle(w, err)
 		return
 	}
 	c.Log.Info.Printf("New movie %s added", movie)
