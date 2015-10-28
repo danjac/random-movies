@@ -6,7 +6,6 @@ import (
 	"flag"
 	"github.com/asaskevich/govalidator"
 	"github.com/codegangsta/negroni"
-	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/unrolled/render"
 	"gopkg.in/redis.v3"
@@ -15,26 +14,53 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"runtime"
 )
+
+// context globals (not threadsafe, so only store thread-safe objects here)
+type AppConfig struct {
+	Env    string
+	Render *render.Render
+	DB     *DB
+	Log    *Logger
+}
+
+// per-request context; we'll stick threadsafe stuff in here at some point
+type Context struct {
+	*AppConfig
+}
+
+func (app *AppConfig) Handler(h HandlerFunc) http.Handler {
+	return Handler{app, h}
+}
+
+type HandlerFunc func(c *Context, w http.ResponseWriter, r *http.Request) error
+
+type Handler struct {
+	*AppConfig
+	H HandlerFunc
+}
+
+func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	c := &Context{h.AppConfig}
+	err := h.H(c, w, r)
+	if err != nil {
+		switch e := err.(error).(type) {
+		case Error:
+			h.Log.Error.Printf("HTTP %s %d: %s", e.Status(), e)
+			http.Error(w, e.Error(), e.Status())
+		default:
+			h.Log.Error.Printf("%v: :%v", r, err)
+			http.Error(w, "Sorry, an error occurred", http.StatusInternalServerError)
+		}
+	}
+
+}
 
 type Logger struct {
 	Debug *log.Logger
 	Info  *log.Logger
 	Warn  *log.Logger
 	Error *log.Logger
-}
-
-func (log *Logger) Handle(w http.ResponseWriter, err error) {
-	switch e := err.(error).(type) {
-	case Error:
-		log.Error.Printf("HTTP %d: %s", e.Status(), e)
-		http.Error(w, e.Error(), e.Status())
-	default:
-		_, fn, line, _ := runtime.Caller(1)
-		log.Error.Printf("%s:%d:%v", fn, line, err)
-		http.Error(w, "Sorry, an error occurred", http.StatusInternalServerError)
-	}
 }
 
 func newLogger() *Logger {
@@ -104,21 +130,10 @@ func (e HTTPError) Status() int {
 
 var errHTTPNotFound = HTTPError{http.StatusNotFound, errors.New("Not found")}
 
-type AppContext struct {
-	Env    string
-	Render *render.Render
-	DB     *DB
-	Log    *Logger
-}
-
-func getAppContext(r *http.Request) *AppContext {
-	return context.Get(r, "appContext").(*AppContext)
-}
-
-func indexPage(w http.ResponseWriter, r *http.Request) {
-	c := getAppContext(r)
+func indexPage(c *Context, w http.ResponseWriter, r *http.Request) error {
 
 	var staticHost string
+
 	if c.Env == "dev" {
 		staticHost = devServerURL
 	}
@@ -129,80 +144,71 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.Render.HTML(w, http.StatusOK, "index", ctx)
+	return nil
 }
 
-func getRandomMovie(w http.ResponseWriter, r *http.Request) {
-	c := getAppContext(r)
+func getRandomMovie(c *Context, w http.ResponseWriter, r *http.Request) error {
 	movie, err := c.DB.GetRandomMovie()
 	if err != nil {
-		c.Log.Handle(w, err)
-		return
+		return err
 	}
 	if movie == nil {
-		c.Log.Handle(w, errHTTPNotFound)
-		return
+		return errHTTPNotFound
 	}
 	c.Render.JSON(w, http.StatusOK, movie)
+	return nil
 }
 
-func getMovie(w http.ResponseWriter, r *http.Request) {
-	c := getAppContext(r)
+func getMovie(c *Context, w http.ResponseWriter, r *http.Request) error {
 	movie, err := c.DB.GetMovie(mux.Vars(r)["id"])
 	if err != nil {
-		c.Log.Handle(w, err)
-		return
+		return err
 	}
 	if movie == nil {
-		c.Log.Handle(w, errHTTPNotFound)
-		return
+		return errHTTPNotFound
 	}
 	c.Render.JSON(w, http.StatusOK, movie)
+	return nil
 }
 
-func deleteMovie(w http.ResponseWriter, r *http.Request) {
-	c := getAppContext(r)
+func deleteMovie(c *Context, w http.ResponseWriter, r *http.Request) error {
 	if err := c.DB.Del(mux.Vars(r)["id"]).Err(); err != nil {
-		c.Log.Handle(w, err)
-		return
+		return err
 	}
 	c.Render.Text(w, http.StatusOK, "Movie deleted")
+	return nil
 }
 
-func getMovies(w http.ResponseWriter, r *http.Request) {
-	c := getAppContext(r)
+func getMovies(c *Context, w http.ResponseWriter, r *http.Request) error {
 	movies, err := c.DB.GetMovies()
 	if err != nil {
-		c.Log.Handle(w, err)
-		return
+		return err
 	}
 	c.Render.JSON(w, http.StatusOK, movies)
+	return nil
 }
 
-func addMovie(w http.ResponseWriter, r *http.Request) {
-	c := getAppContext(r)
+func addMovie(c *Context, w http.ResponseWriter, r *http.Request) error {
 	f := &MovieForm{}
 	if err := f.Decode(r); err != nil {
-		c.Log.Handle(w, HTTPError{http.StatusBadRequest, err})
-		return
+		return HTTPError{http.StatusBadRequest, err}
 	}
 
 	movie, err := getMovieFromOMDB(f.Title)
 	if err != nil {
-		c.Log.Handle(w, err)
-		return
+		return err
 	}
 
 	if movie.ImdbID == "" {
-		c.Log.Handle(w, errHTTPNotFound)
-		return
+		return errHTTPNotFound
 	}
 
 	if err := movie.Save(c.DB); err != nil {
-		c.Log.Handle(w, err)
-		return
+		return err
 	}
 	c.Log.Info.Printf("New movie %s added", movie)
 	c.Render.JSON(w, http.StatusOK, movie)
+	return nil
 }
 
 // decodes JSON body of request and runs through validator
@@ -318,7 +324,16 @@ func main() {
 		panic(err)
 	}
 
-	c := &AppContext{
+	// in a small app we could get away with globals
+	// but here we'll use a global context object we can
+	// inject into each request with all the useful things
+	// we'll need
+
+	// if we start using per-request context objects e.g.
+	// logged in user, where it has to be threadsafe, then
+	// use gorilla context.
+
+	app := &AppConfig{
 		Env:    *env,
 		DB:     db,
 		Render: render.New(),
@@ -333,22 +348,19 @@ func main() {
 		staticURL, http.FileServer(http.Dir(staticDir))))
 
 	// index page
-	router.HandleFunc("/", indexPage).Methods("GET")
+	router.Handle("/", app.Handler(indexPage)).Methods("GET")
 
 	// API calls
 	api := router.PathPrefix("/api/").Subrouter()
 
-	api.HandleFunc("/", getRandomMovie).Methods("GET")
-	api.HandleFunc("/", addMovie).Methods("POST")
-	api.HandleFunc("/movie/{id}", getMovie).Methods("GET")
-	api.HandleFunc("/movie/{id}", deleteMovie).Methods("DELETE")
-	api.HandleFunc("/all/", getMovies).Methods("GET")
+	api.Handle("/", app.Handler(getRandomMovie)).Methods("GET")
+	api.Handle("/", app.Handler(addMovie)).Methods("POST")
+	api.Handle("/movie/{id}", app.Handler(getMovie)).Methods("GET")
+	api.Handle("/movie/{id}", app.Handler(deleteMovie)).Methods("DELETE")
+	api.Handle("/all/", app.Handler(getMovies)).Methods("GET")
 
 	n := negroni.Classic()
-	n.Use(negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		context.Set(r, "appContext", c)
-		next(w, r)
-	}))
+
 	n.UseHandler(router)
 	n.Run(":" + *port)
 
