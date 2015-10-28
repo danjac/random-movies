@@ -1,5 +1,10 @@
 import axios from 'axios';
 
+axios.interceptors.request.use((config) => {
+    config.headers['X-CSRF-Token'] =  window.csrfToken;
+    return config;
+}, (error) => Promise.reject(error));
+
 export function getRandomMovie() {
   return axios.get("/api/");
 }
