@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
-	"github.com/codegangsta/negroni"
 	"github.com/danjac/random_movies/database"
 	"github.com/danjac/random_movies/server"
+	"github.com/justinas/alice"
 	"github.com/justinas/nosurf"
 	"gopkg.in/redis.v3"
+	"net/http"
 )
 
 var (
@@ -47,10 +48,7 @@ func main() {
 
 	s := server.New(*env, db, staticURL, staticDir, devServerURL)
 
-	router := s.Router()
-
-	n := negroni.Classic()
-	n.UseHandler(nosurf.New(router))
-	n.Run(":" + *port)
+	chain := alice.New(nosurf.NewPure).Then(s.Router())
+	http.ListenAndServe(":"+*port, chain)
 
 }
