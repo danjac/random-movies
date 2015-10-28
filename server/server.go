@@ -1,9 +1,9 @@
 package server
 
 import (
+	"github.com/Sirupsen/logrus"
 	"github.com/danjac/random_movies/database"
 	"github.com/danjac/random_movies/errors"
-	"github.com/danjac/random_movies/logger"
 	"github.com/danjac/random_movies/models"
 	"github.com/danjac/random_movies/utils"
 	"github.com/gorilla/mux"
@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func New(env string, db *database.DB, staticURL, staticDir, devServerURL string) *Server {
+func New(env string, db *database.DB, log *logrus.Logger, staticURL, staticDir, devServerURL string) *Server {
 	return &Server{
 		DB:           db,
 		Env:          env,
@@ -20,7 +20,7 @@ func New(env string, db *database.DB, staticURL, staticDir, devServerURL string)
 		StaticURL:    staticURL,
 		StaticDir:    staticDir,
 		Render:       render.New(),
-		Log:          logger.New(),
+		Log:          log,
 	}
 }
 
@@ -32,18 +32,24 @@ type Server struct {
 	DevServerURL string
 	Render       *render.Render
 	DB           *database.DB
-	Log          *logger.Logger
+	Log          *logrus.Logger
 }
 
 func (s *Server) Abort(w http.ResponseWriter, r *http.Request, err error) {
+	logger := s.Log.WithFields(logrus.Fields{
+		"Request": r,
+		"Error":   err,
+	})
+	var msg string
 	switch e := err.(error).(type) {
 	case errors.Error:
-		s.Log.Error.Printf("HTTP %s %d: %s", e.Status(), e)
+		msg = "HTTP Error"
 		http.Error(w, e.Error(), e.Status())
 	default:
-		s.Log.Error.Printf("%v: :%v", r, err)
+		msg = "Internal Server Error"
 		http.Error(w, "Sorry, an error occurred", http.StatusInternalServerError)
 	}
+	logger.Error(msg)
 }
 
 func (s *Server) Router() *mux.Router {
@@ -117,10 +123,14 @@ func (s *Server) getMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) deleteMovie(w http.ResponseWriter, r *http.Request) {
-	if err := s.DB.Del(mux.Vars(r)["id"]).Err(); err != nil {
+	imdbID := mux.Vars(r)["id"]
+	if err := s.DB.Del(imdbID).Err(); err != nil {
 		s.Abort(w, r, err)
 		return
 	}
+	s.Log.WithFields(logrus.Fields{
+		"imdbID": imdbID,
+	}).Warn("Movie has been deleted")
 	s.Render.Text(w, http.StatusOK, "Movie deleted")
 }
 
@@ -157,6 +167,8 @@ func (s *Server) addMovie(w http.ResponseWriter, r *http.Request) {
 		s.Abort(w, r, err)
 		return
 	}
-	s.Log.Info.Printf("New movie %s added", movie)
+	s.Log.WithFields(logrus.Fields{
+		"movie": movie,
+	}).Info("New movie added")
 	s.Render.JSON(w, http.StatusOK, movie)
 }

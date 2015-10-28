@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/Sirupsen/logrus"
 	"github.com/danjac/random_movies/database"
 	"github.com/danjac/random_movies/server"
 	"github.com/justinas/alice"
@@ -37,16 +38,14 @@ func main() {
 		panic(err)
 	}
 
-	// in a small app we could get away with globals
-	// but here we'll use a global context object we can
-	// inject into each request with all the useful things
-	// we'll need
+	log := logrus.New()
 
-	// if we start using per-request context objects e.g.
-	// logged in user, where it has to be threadsafe, then
-	// use gorilla context.
+	log.Formatter = &logrus.TextFormatter{
+		FullTimestamp: true,
+		ForceColors:   true,
+	}
 
-	s := server.New(*env, db, staticURL, staticDir, devServerURL)
+	s := server.New(*env, db, log, staticURL, staticDir, devServerURL)
 
 	chain := alice.New(nosurf.NewPure).Then(s.Router())
 	http.ListenAndServe(":"+*port, chain)
