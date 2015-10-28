@@ -12,27 +12,28 @@ import (
 	"net/http"
 )
 
-func New(env string, db *database.DB, log *logrus.Logger, staticURL, staticDir, devServerURL string) *Server {
+func New(db *database.DB, log *logrus.Logger, config *Config) *Server {
 	return &Server{
-		DB:           db,
-		Env:          env,
-		DevServerURL: devServerURL,
-		StaticURL:    staticURL,
-		StaticDir:    staticDir,
-		Render:       render.New(),
-		Log:          log,
+		DB:     db,
+		Render: render.New(),
+		Log:    log,
+		Config: config,
 	}
 }
 
 // context globals (not threadsafe, so only store thread-safe objects here)
 type Server struct {
+	Config *Config
+	Render *render.Render
+	DB     *database.DB
+	Log    *logrus.Logger
+}
+
+type Config struct {
 	Env          string
 	StaticURL    string
 	StaticDir    string
 	DevServerURL string
-	Render       *render.Render
-	DB           *database.DB
-	Log          *logrus.Logger
 }
 
 func (s *Server) Abort(w http.ResponseWriter, r *http.Request, err error) {
@@ -57,8 +58,8 @@ func (s *Server) Router() *mux.Router {
 
 	// static content
 	router.PathPrefix(
-		s.StaticURL).Handler(http.StripPrefix(
-		s.StaticURL, http.FileServer(http.Dir(s.StaticDir))))
+		s.Config.StaticURL).Handler(http.StripPrefix(
+		s.Config.StaticURL, http.FileServer(http.Dir(s.Config.StaticDir))))
 
 	// index page
 	router.HandleFunc("/", s.indexPage).Methods("GET")
@@ -79,15 +80,15 @@ func (s *Server) indexPage(w http.ResponseWriter, r *http.Request) {
 
 	var staticHost string
 
-	if s.Env == "dev" {
-		staticHost = s.DevServerURL
+	if s.Config.Env == "dev" {
+		staticHost = s.Config.DevServerURL
 	}
 
 	csrfToken := nosurf.Token(r)
 
 	ctx := map[string]string{
 		"staticHost": staticHost,
-		"env":        s.Env,
+		"env":        s.Config.Env,
 		"csrfToken":  csrfToken,
 	}
 	s.Render.HTML(w, http.StatusOK, "index", ctx)

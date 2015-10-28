@@ -45,7 +45,11 @@ func main() {
 		ForceColors:   true,
 	}
 
-	s := server.New(*env, db, log, staticURL, staticDir, devServerURL)
+	s := server.New(db, log, &server.Config{
+		StaticURL:    staticURL,
+		StaticDir:    staticDir,
+		DevServerURL: devServerURL,
+	})
 
 	chain := alice.New(nosurf.NewPure).Then(s.Router())
 	http.ListenAndServe(":"+*port, chain)
