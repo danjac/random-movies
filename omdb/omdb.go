@@ -1,4 +1,4 @@
-package utils
+package omdb
 
 import (
 	"encoding/json"
@@ -9,7 +9,9 @@ import (
 	"net/url"
 )
 
-func GetMovieFromOMDB(title string) (*models.Movie, error) {
+var ErrMovieNotFound = errors.New("Movie not found")
+
+func Search(title string) (*models.Movie, error) {
 
 	u, _ := url.Parse("http://omdbapi.com")
 
@@ -35,7 +37,7 @@ func GetMovieFromOMDB(title string) (*models.Movie, error) {
 	}
 
 	if movie.ImdbID == "" {
-		return nil, errors.New("Movie not found")
+		return nil, ErrMovieNotFound
 	}
 
 	return movie, nil

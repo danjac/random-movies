@@ -46,6 +46,7 @@ func main() {
 	}
 
 	s := server.New(db, log, &server.Config{
+		Env:          *env,
 		StaticURL:    staticURL,
 		StaticDir:    staticDir,
 		DevServerURL: devServerURL,

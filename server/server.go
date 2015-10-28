@@ -5,7 +5,7 @@ import (
 	"github.com/danjac/random_movies/database"
 	"github.com/danjac/random_movies/errors"
 	"github.com/danjac/random_movies/models"
-	"github.com/danjac/random_movies/utils"
+	"github.com/danjac/random_movies/omdb"
 	"github.com/gorilla/mux"
 	"github.com/justinas/nosurf"
 	"github.com/unrolled/render"
@@ -82,6 +82,7 @@ func (s *Server) indexPage(w http.ResponseWriter, r *http.Request) {
 
 	if s.Config.Env == "dev" {
 		staticHost = s.Config.DevServerURL
+		s.Log.Info("Running development version")
 	}
 
 	csrfToken := nosurf.Token(r)
@@ -153,14 +154,13 @@ func (s *Server) addMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	movie, err := utils.GetMovieFromOMDB(f.Title)
+	movie, err := omdb.Search(f.Title)
 	if err != nil {
-		s.Abort(w, r, err)
-		return
-	}
-
-	if movie.ImdbID == "" {
-		s.Abort(w, r, errors.ErrHTTPNotFound)
+		if err == omdb.ErrMovieNotFound {
+			s.Abort(w, r, errors.ErrHTTPNotFound)
+		} else {
+			s.Abort(w, r, err)
+		}
 		return
 	}
 
