@@ -45,9 +45,9 @@ func main() {
 	// logged in user, where it has to be threadsafe, then
 	// use gorilla context.
 
-	c := server.NewAppConfig(*env, db, staticURL, staticDir, devServerURL)
+	s := server.New(*env, db, staticURL, staticDir, devServerURL)
 
-	router := c.Router()
+	router := s.Router()
 
 	n := negroni.Classic()
 	n.UseHandler(nosurf.New(router))
