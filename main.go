@@ -53,6 +53,11 @@ func main() {
 	})
 
 	chain := alice.New(nosurf.NewPure).Then(s.Router())
+
+	log.WithFields(logrus.Fields{
+		"port": *port,
+	}).Info("Server started")
+
 	http.ListenAndServe(":"+*port, chain)
 
 }

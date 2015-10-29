@@ -38,8 +38,9 @@ type Config struct {
 
 func (s *Server) Abort(w http.ResponseWriter, r *http.Request, err error) {
 	logger := s.Log.WithFields(logrus.Fields{
-		"Request": r,
-		"Error":   err,
+		"URL":    r.URL,
+		"Method": r.Method,
+		"Error":  err,
 	})
 	var msg string
 	switch e := err.(error).(type) {
@@ -157,6 +158,9 @@ func (s *Server) addMovie(w http.ResponseWriter, r *http.Request) {
 	movie, err := omdb.Search(f.Title)
 	if err != nil {
 		if err == omdb.ErrMovieNotFound {
+			s.Log.WithFields(logrus.Fields{
+				"title": f.Title,
+			}).Warn("No movie found")
 			s.Abort(w, r, errors.ErrHTTPNotFound)
 		} else {
 			s.Abort(w, r, err)

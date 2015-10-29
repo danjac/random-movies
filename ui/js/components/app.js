@@ -45,7 +45,10 @@ export default class App extends React.Component {
 
     if (title) {
       node.value = "";
-      this.actions.addMovie(title, this.actions.pushState);
+      const onSuccess = (result) => {
+          this.actions.pushState(null, `/movie/${result.data.imdbID}/`);
+      }
+      this.actions.addMovie(title, onSuccess);
     }
   }
 
