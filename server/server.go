@@ -3,8 +3,8 @@ package server
 import (
 	"github.com/Sirupsen/logrus"
 	"github.com/danjac/random_movies/database"
+	"github.com/danjac/random_movies/decoders"
 	"github.com/danjac/random_movies/errors"
-	"github.com/danjac/random_movies/models"
 	"github.com/danjac/random_movies/omdb"
 	"github.com/gorilla/mux"
 	"github.com/justinas/nosurf"
@@ -149,7 +149,7 @@ func (s *Server) getMovies(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) addMovie(w http.ResponseWriter, r *http.Request) {
 
-	f := &models.MovieForm{}
+	f := &decoders.MovieDecoder{}
 	if err := f.Decode(r); err != nil {
 		s.Abort(w, r, errors.HTTPError{http.StatusBadRequest, err})
 		return
