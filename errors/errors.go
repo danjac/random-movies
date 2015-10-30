@@ -23,4 +23,4 @@ func (e HTTPError) Status() int {
 	return e.Code
 }
 
-var ErrHTTPNotFound = HTTPError{http.StatusNotFound, errors.New("Not found")}
+var ErrMovieNotFound = HTTPError{http.StatusNotFound, errors.New("Movie not found")}

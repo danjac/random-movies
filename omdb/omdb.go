@@ -2,14 +2,12 @@ package omdb
 
 import (
 	"encoding/json"
-	"errors"
+	"github.com/danjac/random_movies/errors"
 	"github.com/danjac/random_movies/models"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 )
-
-var ErrMovieNotFound = errors.New("Movie not found")
 
 func Search(title string) (*models.Movie, error) {
 
@@ -37,7 +35,7 @@ func Search(title string) (*models.Movie, error) {
 	}
 
 	if movie.ImdbID == "" {
-		return nil, ErrMovieNotFound
+		return nil, errors.ErrMovieNotFound
 	}
 
 	return movie, nil

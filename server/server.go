@@ -99,15 +99,12 @@ func (s *Server) indexPage(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getRandomMovie(w http.ResponseWriter, r *http.Request) {
 
 	movie, err := s.DB.GetRandomMovie()
+
 	if err != nil {
 		s.Abort(w, r, err)
 		return
 	}
 
-	if movie == nil {
-		s.Abort(w, r, errors.ErrHTTPNotFound)
-		return
-	}
 	s.Render.JSON(w, http.StatusOK, movie)
 }
 
@@ -116,10 +113,6 @@ func (s *Server) getMovie(w http.ResponseWriter, r *http.Request) {
 	movie, err := s.DB.GetMovie(mux.Vars(r)["id"])
 	if err != nil {
 		s.Abort(w, r, err)
-		return
-	}
-	if movie == nil {
-		s.Abort(w, r, errors.ErrHTTPNotFound)
 		return
 	}
 	s.Render.JSON(w, http.StatusOK, movie)
@@ -157,14 +150,7 @@ func (s *Server) addMovie(w http.ResponseWriter, r *http.Request) {
 
 	movie, err := omdb.Search(f.Title)
 	if err != nil {
-		if err == omdb.ErrMovieNotFound {
-			s.Log.WithFields(logrus.Fields{
-				"title": f.Title,
-			}).Warn("No movie found")
-			s.Abort(w, r, errors.ErrHTTPNotFound)
-		} else {
-			s.Abort(w, r, err)
-		}
+		s.Abort(w, r, err)
 		return
 	}
 
