@@ -6,11 +6,33 @@ import (
 	"gopkg.in/redis.v3"
 )
 
-type DB struct {
+type DB interface {
+	GetAll() ([]*models.Movie, error)
+	GetRandom() (*models.Movie, error)
+	Get(string) (*models.Movie, error)
+	Save(*models.Movie) error
+	Delete(string) error
+}
+
+func New(url string, password string, database int64) (DB, error) {
+	db := &defaultImpl{redis.NewClient(&redis.Options{
+		Addr:     url,
+		Password: password,
+		DB:       database,
+	})}
+	_, err := db.Ping().Result()
+	return db, err
+}
+
+type defaultImpl struct {
 	*redis.Client
 }
 
-func (db *DB) GetRandomMovie() (*models.Movie, error) {
+func (db *defaultImpl) Delete(imdbID string) error {
+	return db.Del(imdbID).Err()
+}
+
+func (db *defaultImpl) GetRandom() (*models.Movie, error) {
 	imdbID, err := db.RandomKey().Result()
 	if err == redis.Nil {
 		return nil, errors.ErrMovieNotFound
@@ -18,12 +40,12 @@ func (db *DB) GetRandomMovie() (*models.Movie, error) {
 	if err != nil {
 		return nil, err
 	}
-	return db.GetMovie(imdbID)
+	return db.Get(imdbID)
 }
 
-func (db *DB) GetMovie(imdbID string) (*models.Movie, error) {
+func (db *defaultImpl) Get(imdbID string) (*models.Movie, error) {
 	movie := &models.Movie{}
-	if err := db.Get(imdbID).Scan(movie); err != nil {
+	if err := db.Client.Get(imdbID).Scan(movie); err != nil {
 		if err == redis.Nil {
 			return nil, errors.ErrMovieNotFound
 		} else {
@@ -33,11 +55,11 @@ func (db *DB) GetMovie(imdbID string) (*models.Movie, error) {
 	return movie, nil
 }
 
-func (db *DB) SaveMovie(movie *models.Movie) error {
+func (db *defaultImpl) Save(movie *models.Movie) error {
 	return db.Set(movie.ImdbID, movie, 0).Err()
 }
 
-func (db *DB) GetMovies() ([]*models.Movie, error) {
+func (db *defaultImpl) GetAll() ([]*models.Movie, error) {
 	result := db.Keys("*")
 	if err := result.Err(); err != nil {
 		return nil, err
@@ -45,7 +67,7 @@ func (db *DB) GetMovies() ([]*models.Movie, error) {
 	var movies []*models.Movie
 	for _, imdbID := range result.Val() {
 		movie := &models.Movie{}
-		if err := db.Get(imdbID).Scan(movie); err == nil {
+		if err := db.Client.Get(imdbID).Scan(movie); err == nil {
 			movies = append(movies, movie)
 		}
 	}

@@ -24,17 +24,23 @@ function removeMessage(messages, index) {
 
 function mainReducer(state=initialState, action) {
   switch(action.type) {
+
     case ActionTypes.DISMISS_MESSAGE:
       return Object.assign({}, state, { messages: removeMessage(state.messages, action.payload) });
+
     case ActionTypes.RESET_MOVIE:
       return Object.assign({}, state, { movie: null });
+
     case ActionTypes.GET_MOVIES:
       return Object.assign({}, state, { movies: action.payload.data });
+
     case ActionTypes.GET_MOVIE:
     case ActionTypes.GET_RANDOM_MOVIE:
       return Object.assign({}, state, { movie: action.payload.data });
+
     case ActionTypes.DELETE_MOVIE:
       return Object.assign({}, state, { messages: addMessage(state.messages, { status: "info", msg: "Your movie has been deleted"}) });
+
     case ActionTypes.ADD_MOVIE:
       let msg;
       if (action.error) {
@@ -43,6 +49,7 @@ function mainReducer(state=initialState, action) {
         msg = { status: "success", msg: "Your movie has been added" };
       }
       return Object.assign({}, state, { messages: addMessage(state.messages, msg) });
+
     default:
       return state;
   }

@@ -2,17 +2,29 @@ package omdb
 
 import (
 	"encoding/json"
-	"github.com/danjac/random_movies/errors"
-	"github.com/danjac/random_movies/models"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"github.com/danjac/random_movies/errors"
+	"github.com/danjac/random_movies/models"
 )
 
-func Search(title string) (*models.Movie, error) {
+// Finds a movie
+type Finder interface {
+	Find(title string) (*models.Movie, error)
+}
 
+// returns default implementation
+func New() Finder {
+	return &finderImpl{}
+}
+
+type finderImpl struct{}
+
+// Search finds a movie from OMDB
+func (impl *finderImpl) Find(title string) (*models.Movie, error) {
 	u, _ := url.Parse("http://omdbapi.com")
-
 	q := u.Query()
 	q.Set("t", title)
 

@@ -12,9 +12,10 @@ import (
 	"net/http"
 )
 
-func New(db *database.DB, log *logrus.Logger, config *Config) *Server {
+func New(db database.DB, log *logrus.Logger, config *Config) *Server {
 	return &Server{
 		DB:     db,
+		OMDB:   omdb.New(),
 		Render: render.New(),
 		Log:    log,
 		Config: config,
@@ -24,8 +25,9 @@ func New(db *database.DB, log *logrus.Logger, config *Config) *Server {
 // context globals (not threadsafe, so only store thread-safe objects here)
 type Server struct {
 	Config *Config
+	OMDB   omdb.Finder
 	Render *render.Render
-	DB     *database.DB
+	DB     database.DB
 	Log    *logrus.Logger
 }
 
@@ -98,7 +100,7 @@ func (s *Server) indexPage(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) getRandomMovie(w http.ResponseWriter, r *http.Request) {
 
-	movie, err := s.DB.GetRandomMovie()
+	movie, err := s.DB.GetRandom()
 
 	if err != nil {
 		s.Abort(w, r, err)
@@ -110,7 +112,7 @@ func (s *Server) getRandomMovie(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) getMovie(w http.ResponseWriter, r *http.Request) {
 
-	movie, err := s.DB.GetMovie(mux.Vars(r)["id"])
+	movie, err := s.DB.Get(mux.Vars(r)["id"])
 	if err != nil {
 		s.Abort(w, r, err)
 		return
@@ -120,7 +122,7 @@ func (s *Server) getMovie(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) deleteMovie(w http.ResponseWriter, r *http.Request) {
 	imdbID := mux.Vars(r)["id"]
-	if err := s.DB.Del(imdbID).Err(); err != nil {
+	if err := s.DB.Delete(imdbID); err != nil {
 		s.Abort(w, r, err)
 		return
 	}
@@ -132,7 +134,7 @@ func (s *Server) deleteMovie(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) getMovies(w http.ResponseWriter, r *http.Request) {
 
-	movies, err := s.DB.GetMovies()
+	movies, err := s.DB.GetAll()
 	if err != nil {
 		s.Abort(w, r, err)
 		return
@@ -148,13 +150,13 @@ func (s *Server) addMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	movie, err := omdb.Search(f.Title)
+	movie, err := s.OMDB.Find(f.Title)
 	if err != nil {
 		s.Abort(w, r, err)
 		return
 	}
 
-	if err := s.DB.SaveMovie(movie); err != nil {
+	if err := s.DB.Save(movie); err != nil {
 		s.Abort(w, r, err)
 		return
 	}

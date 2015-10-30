@@ -7,7 +7,6 @@ import (
 	"github.com/danjac/random_movies/server"
 	"github.com/justinas/alice"
 	"github.com/justinas/nosurf"
-	"gopkg.in/redis.v3"
 	"net/http"
 )
 
@@ -27,13 +26,8 @@ func main() {
 
 	flag.Parse()
 
-	db := &database.DB{redis.NewClient(&redis.Options{
-		Addr:     redisAddr,
-		Password: "",
-		DB:       0,
-	})}
+	db, err := database.New(redisAddr, "", 0)
 
-	_, err := db.Ping().Result()
 	if err != nil {
 		panic(err)
 	}
