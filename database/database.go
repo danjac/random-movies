@@ -6,12 +6,20 @@ import (
 	"gopkg.in/redis.v3"
 )
 
-type DB interface {
+type MovieGetter interface {
 	GetAll() ([]*models.Movie, error)
 	GetRandom() (*models.Movie, error)
 	Get(string) (*models.Movie, error)
-	Save(*models.Movie) error
+}
+
+type MovieStore interface {
 	Delete(string) error
+	Save(*models.Movie) error
+}
+
+type DB interface {
+	MovieGetter
+	MovieStore
 }
 
 type Config struct {
