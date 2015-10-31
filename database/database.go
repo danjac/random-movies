@@ -14,11 +14,25 @@ type DB interface {
 	Delete(string) error
 }
 
-func New(url string, password string, database int64) (DB, error) {
+type Config struct {
+	URL      string
+	Password string
+	DB       int64
+}
+
+func DefaultConfig() *Config {
+	return &Config{
+		URL:      "localhost:6379",
+		Password: "",
+		DB:       0,
+	}
+}
+
+func New(config *Config) (DB, error) {
 	db := &defaultImpl{redis.NewClient(&redis.Options{
-		Addr:     url,
-		Password: password,
-		DB:       database,
+		Addr:     config.URL,
+		Password: config.Password,
+		DB:       config.DB,
 	})}
 	_, err := db.Ping().Result()
 	return db, err

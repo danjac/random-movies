@@ -19,14 +19,13 @@ const (
 	staticURL    = "/static/"
 	staticDir    = "./dist/"
 	devServerURL = "http://localhost:8080"
-	redisAddr    = "localhost:6379"
 )
 
 func main() {
 
 	flag.Parse()
 
-	db, err := database.New(redisAddr, "", 0)
+	db, err := database.New(database.DefaultConfig())
 
 	if err != nil {
 		panic(err)
