@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"github.com/Sirupsen/logrus"
 	"github.com/danjac/random_movies/models"
 	"github.com/unrolled/render"
@@ -56,5 +57,16 @@ func TestRandomMovie(t *testing.T) {
 	s.getRandomMovie(w, req)
 	if w.Code != http.StatusOK {
 		t.Errorf("Random movie did not return %v", http.StatusOK)
+	}
+}
+
+func TestAddMovie(t *testing.T) {
+	jsonStr := []byte(`{"Title":"The Martian"}`)
+	req, _ := http.NewRequest("POST", "", bytes.NewBuffer(jsonStr))
+	w := httptest.NewRecorder()
+	s := newTestServer()
+	s.addMovie(w, req)
+	if w.Code != http.StatusCreated {
+		t.Errorf("Add movie did not return %v", http.StatusCreated)
 	}
 }

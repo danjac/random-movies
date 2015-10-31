@@ -143,7 +143,6 @@ func (s *Server) getMovies(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) addMovie(w http.ResponseWriter, r *http.Request) {
-
 	f := &decoders.MovieDecoder{}
 	if err := f.Decode(r); err != nil {
 		s.Abort(w, r, errors.HTTPError{http.StatusBadRequest, err})
@@ -163,5 +162,5 @@ func (s *Server) addMovie(w http.ResponseWriter, r *http.Request) {
 	s.Log.WithFields(logrus.Fields{
 		"movie": movie,
 	}).Info("New movie added")
-	s.Render.JSON(w, http.StatusOK, movie)
+	s.Render.JSON(w, http.StatusCreated, movie)
 }
