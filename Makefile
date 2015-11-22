@@ -4,7 +4,8 @@ export GOPATH
 #build: build-go migrate build-ui
 
 build-go:
-	#godep restore
+	#go get github.com/tools/godep
+	godep restore
 	go build -o bin/serve -i main.go
 
 
