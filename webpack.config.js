@@ -57,7 +57,7 @@ module.exports = {
   },
   resolve: {
     extensions: ['', '.js'],
-    modulesDirectories: ['ui', 'node_modules']
+    modulesDirectories: ['./ui', './node_modules']
   }
 
 };
