@@ -33,13 +33,33 @@ export class Movie extends React.Component {
     this.actions.pushState(null, "/all/");
   }
 
+  renderStars() {
+
+    const movie = this.props.movie;
+    const isRated = !(isNaN(movie.imdbRating));
+
+    if (!isRated) {
+      return <h3><em>This movie has not been rated yet.</em></h3>;
+    }
+
+    const rating = parseFloat(movie.imdbRating);
+    const stars = Math.round(rating);
+
+    return (
+        <h3>
+          {_.range(stars).map(index => <Glyphicon key={index} glyph="star" />)}
+          {_.range(10 - stars).map(index => <Glyphicon key={index} glyph="star-empty" />)}
+          &nbsp; {rating} <a target="_blank" href={`http://www.imdb.com/title/${movie.imdbID}/`}><small>IMDB</small></a>
+        </h3>
+    );
+
+  }
+
   render() {
     const movie = this.props.movie;
     if (!movie || !movie.imdbID) {
       return <div></div>;
     }
-    const rating = this.props.movie.imdbRating ? parseFloat(this.props.movie.imdbRating) : 0;
-    const stars = Math.round(rating);
 
     return (
       <div className="row">
@@ -48,11 +68,7 @@ export class Movie extends React.Component {
         </div>
         <div className="col-md-9">
           <h2>{movie.Title}</h2>
-          <h3>
-            {_.range(stars).map(index => <Glyphicon key={index} glyph="star" />)}
-            {_.range(10 - stars).map(index => <Glyphicon key={index} glyph="star-empty" />)}
-            &nbsp; {rating} <a target="_blank" href={`http://www.imdb.com/title/${movie.imdbID}/`}><small>IMDB</small></a>
-          </h3>
+          {this.renderStars()}
           <dl className="dl-unstyled">
             <dt>Year</dt>
             <dd>{movie.Year}</dd>
