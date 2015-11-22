@@ -25,17 +25,20 @@ func main() {
 
 	flag.Parse()
 
-	db, err := database.New(database.DefaultConfig())
-
-	if err != nil {
-		panic(err)
-	}
-
 	log := logrus.New()
 
 	log.Formatter = &logrus.TextFormatter{
 		FullTimestamp: true,
 		ForceColors:   true,
+	}
+
+	log.Info("Starting...")
+
+	db, err := database.New(database.DefaultConfig())
+
+	if err != nil {
+		log.Error("Bad Redis connection, shutting down...")
+		panic(err)
 	}
 
 	s := server.New(db, log, &server.Config{

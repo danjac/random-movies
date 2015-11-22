@@ -1,0 +1,10 @@
+web:
+  build: .
+  ports:
+   - "4000:4000"
+  volumes:
+   - .:/go/src/github.com/danjac/random_movies 
+  links:
+   - redis
+redis:
+  image: redis
