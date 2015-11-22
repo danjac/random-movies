@@ -16,13 +16,7 @@ import { connect } from 'react-redux';
 
 import * as actions from '../actions';
 
-@connect(state => {
-  return {
-      messages: state.main.messages,
-      router: state.router
-  };
-})
-export default class App extends React.Component {
+class App extends React.Component {
 
   static propTypes = {
     dispatch: PropTypes.func.isRequired,
@@ -86,4 +80,10 @@ export default class App extends React.Component {
   }
 }
 
+export default connect(state => {
+  return {
+      messages: state.main.messages,
+      router: state.router
+  };
+})(App);
 

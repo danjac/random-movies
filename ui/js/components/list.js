@@ -19,14 +19,7 @@ function getInitial(title) {
   return '-';
 }
 
-@connect(state => {
-  let movies = state.main.movies;
-  movies.sort((left, right) => left.Title > right.Title ? 1 : (left.Title < right.Title ? -1 : 0));
-  return {
-      movies: movies
-  };
-})
-export default class MovieList extends React.Component {
+class MovieList extends React.Component {
 
   static propTypes = {
     dispatch: PropTypes.func.isRequired
@@ -78,6 +71,13 @@ export default class MovieList extends React.Component {
     );
   }
 
-
 }
+
+export default connect(state => {
+  let movies = state.main.movies;
+  movies.sort((left, right) => left.Title > right.Title ? 1 : (left.Title < right.Title ? -1 : 0));
+  return {
+      movies: movies
+  };
+})(MovieList);
 
