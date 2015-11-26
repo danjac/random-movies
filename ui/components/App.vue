@@ -1,13 +1,23 @@
 <template>
     <div class="container">
     <h1>Random movies</h1>
-    <div v-for="alert in alerts" class="alert alert-dismissable alert-{{alert.type}}" role="alert">
-<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true" v-on:click="removeAlert(alert)">&times;</span></button>
+    <div v-for="alert in alerts" 
+         class="alert alert-dismissable alert-{{alert.type}}" 
+         role="alert">
+        <button type="button" 
+                class="close" 
+                data-dismiss="alert" 
+                aria-label="Close">
+            <span aria-hidden="true" v-on:click="removeAlert(alert)">&times;</span>
+        </button>
         {{alert.msg}}
     </div>
     <form class="form form-horizontal" v-on:submit="addMovie">
         <div class="form-group">
-            <input class="form-control" type="text" placeholder="Find another movie" v-model="title" />
+            <input class="form-control" 
+                   type="text" 
+                   placeholder="Find another movie" 
+                   v-model="title" />
         </div>
         <button class="btn btn-primary form-control" type="submit">
             <span class="glyphicon glyphicon-plus"></span> Add
