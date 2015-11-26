@@ -1,63 +1,48 @@
-var path = require('path');
+var vue = require('vue-loader');
 var webpack = require('webpack');
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
-var UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
-
-var env = process.env.WEBPACK_ENV;
-
-var entry = ['babel-polyfill', './js/main.js'];
-
-var plugins = [
-  new ExtractTextPlugin('[name].css', {
-    allChunks: true
-  })
-];
-
-switch(process.env.WEBPACK_ENV) {
-  case 'dev':
-  entry.unshift('webpack-dev-server/client?http://localhost:8080');
-  entry.unshift('webpack/hot/only-dev-server');
-  plugins.unshift(new webpack.HotModuleReplacementPlugin());
-  break;
-  case 'prod':
-  plugins.push(new UglifyJsPlugin({ minimize: true }));
-  break;
-}
 
 module.exports = {
-  context: path.join(__dirname, 'ui'),
-  devtool: 'source-map',
-  entry: entry,
+  entry: './ui/main.js',
   output: {
-    path: path.join(__dirname, 'dist'),
-    filename: "[name].js",
-    publicPath: 'http://localhost:8080/static/'
+    path: './static',
+    publicPath: '/static/',
+    filename: 'build.js'
   },
-  plugins: plugins,
   module: {
     loaders: [
       {
-        test: /\.css$/,
-        loader: ExtractTextPlugin.extract('style-loader', 'css-loader')
-      },
-      {
-        test: /\.(png|woff|woff2|eot|ttf|svg)$/,
-        loader: 'url-loader?limit=200000'
+        test: /\.vue$/,
+        loader: 'vue'
       },
       {
         test: /\.js$/,
-        loader: 'babel-loader',
-        query: {
-          presets: ['react', 'es2015', 'stage-0']
-        },
-        include: path.join(__dirname, 'ui/js'),
-        exclude: path.join(__dirname, 'node_modules')
+        // excluding some local linked packages.
+        // for normal use cases only node_modules is needed.
+        exclude: /node_modules|vue\/src|vue-router\/|vue-loader\/|vue-hot-reload-api\//,
+        loader: 'babel'
       }
     ]
   },
-  resolve: {
-    extensions: ['', '.js'],
-    modulesDirectories: ['./ui', './node_modules']
+  babel: {
+    presets: ['es2015'],
+    plugins: ['transform-runtime']
   }
+}
 
-};
+if (process.env.NODE_ENV === 'production') {
+  module.exports.plugins = [
+    new webpack.DefinePlugin({
+      'process.env': {
+        NODE_ENV: '"production"'
+      }
+    }),
+    new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        warnings: false
+      }
+    }),
+    new webpack.optimize.OccurenceOrderPlugin()
+  ]
+} else {
+  module.exports.devtool = '#source-map'
+}
