@@ -32,7 +32,7 @@ func main() {
 		ForceColors:   true,
 	}
 
-	log.Info("Starting...")
+	log.Info("Starting web service...")
 
 	db, err := database.New(database.DefaultConfig())
 

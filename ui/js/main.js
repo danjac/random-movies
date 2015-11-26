@@ -4,7 +4,8 @@ import { ReduxRouter } from 'redux-router';
 import { Provider } from 'react-redux';
 import { DevTools, DebugPanel, LogMonitor } from 'redux-devtools/lib/react';
 
-import { App, Movie, MovieList } from './components';
+import { Movie, MovieList } from './components';
+import { App } from './containers';
 
 import * as actions from './actions';
 import configureStore from './store';

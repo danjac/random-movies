@@ -3,6 +3,8 @@ var webpack = require('webpack');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
 
+require('es6-promise').polyfill();
+
 var env = process.env.WEBPACK_ENV;
 
 var entry = ['babel-polyfill', './js/main.js'];
