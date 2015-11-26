@@ -9,6 +9,11 @@
 
     <div class="col-md-9">
         <h2>{{movie.Title}}</h2> 
+        <h3 v-if="rating">
+            <span v-for="star in stars" class="glyphicon glyphicon-star"></span>
+            <span v-for="star in emptyStars" class="glyphicon glyphicon-star-empty"></span>
+            &nbsp; {{rating}} <a target="_blank" href="http://www.imdb.com/title/{{movie.imdbID}}"><small>IMDB</small></a>
+        </h3>
         <dl class="dl-unstyled">
             <dt>Year</dt>
             <dd>{{movie.Year}}</dd>
@@ -35,6 +40,7 @@
 </template>
 
 <script>
+import _ from 'lodash';
 import store from '../store';
 
 export default {
@@ -44,6 +50,21 @@ export default {
         return {
             movie: {}
         };
+    },
+    computed: {
+        rating() {
+            if (isNaN(this.movie.imdbRating)) {
+                return 0;
+            }
+            return parseFloat(this.movie.imdbRating);
+        },
+        stars() {
+            return _.range(this.rating);
+        },
+        emptyStars() {
+            return _.range(10 - this.rating);
+        }
+
     },
     route: {
         data({ to }) {
