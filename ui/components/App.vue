@@ -64,6 +64,10 @@ export default {
                     store.createAlert('New movie added', 'success');
                     this.$route.router.go(`/movie/${movie.imdbID}`);
                 }
+            }, {
+                error() {
+                    store.createAlert("Sorry, couldn't find this movie", 'warning');
+                }
             });
         }
     }
