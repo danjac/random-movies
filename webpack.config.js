@@ -6,7 +6,7 @@ module.exports = {
   output: {
     path: './static',
     publicPath: '/static/',
-    filename: 'build.js'
+    filename: 'main.js'
   },
   module: {
     loaders: [
@@ -20,6 +20,10 @@ module.exports = {
         // for normal use cases only node_modules is needed.
         exclude: /node_modules|vue\/src|vue-router\/|vue-loader\/|vue-hot-reload-api\//,
         loader: 'babel'
+      },
+      {
+        test: /\.(png|woff|woff2|eot|ttf|svg)$/,
+        loader: 'url-loader?limit=200000'
       }
     ]
   },

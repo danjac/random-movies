@@ -1,0 +1,3 @@
+<template>
+  Movie goes here...
+</template>
