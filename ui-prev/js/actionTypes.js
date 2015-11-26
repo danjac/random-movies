@@ -1,9 +1,0 @@
-export default {
-  DISMISS_MESSAGE: Symbol('DISMISS_MESSAGE'),
-  RESET_MOVIE: Symbol('RESET_MOVIE'),
-  DELETE_MOVIE: Symbol('DELETE_MOVIE'),
-  ADD_MOVIE: Symbol('ADD_MOVIE'),
-  GET_MOVIE: Symbol('GET_MOVIE'),
-  GET_RANDOM_MOVIE: Symbol('GET_RANDOM_MOVIE'),
-  GET_MOVIES: Symbol('GET_MOVIES')
-};
