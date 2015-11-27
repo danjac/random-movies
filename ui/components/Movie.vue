@@ -1,13 +1,15 @@
 <template>
   <div class="row">
 
-    <div class="col-md-3">
-        <img class="img-responsive" 
+    <div class="col-md-3" v-if="loaded">
+        <span v-if="movie.Poster === 'N/A'">No poster available</span>
+        <img v-else 
+             class="img-responsive" 
              v-bind:src="movie.Poster" 
              v-bind:alt="movie.Title" />
     </div>
 
-    <div class="col-md-9">
+    <div class="col-md-9" v-if="loaded">
         <h2>{{movie.Title}}</h2> 
         <h3 v-if="rating">
             <span v-for="star in stars" class="glyphicon glyphicon-star"></span>
@@ -48,7 +50,8 @@ export default {
     name: "Movie",
     data() {
         return {
-            movie: {}
+            movie: {},
+            loaded: false
         };
     },
     computed: {
@@ -72,16 +75,22 @@ export default {
             if (id) {
                 return this.$http.get(`/api/movie/${id}`, movie => {
                     return {
-                        movie
+                        movie,
+                        loaded: true
                     };
                 });
             } else {
                 return this.$http.get("/api/", movie => {
                     return {
-                        movie
+                        movie,
+                        loaded: true
                     };
                 });
             }
+        },
+        deactivate() {
+            this.movie = {};
+            this.loaded = false;
         }
     },
     methods: {
