@@ -17,7 +17,7 @@ var (
 
 const (
 	staticURL    = "/static/"
-	staticDir    = "./dist/"
+	staticDir    = "./static/"
 	devServerURL = "http://localhost:8080"
 )
 

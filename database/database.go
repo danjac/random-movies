@@ -30,7 +30,7 @@ type Config struct {
 
 func DefaultConfig() *Config {
 	return &Config{
-		URL:      "localhost:6379",
+		URL:      "redis:6379",
 		Password: "",
 		DB:       0,
 	}
