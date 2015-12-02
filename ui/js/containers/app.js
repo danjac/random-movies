@@ -1,5 +1,5 @@
 import React, { PropTypes } from 'react';
-import { pushState } from 'redux-router';
+import { updatePath } from 'redux-simple-router'
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -27,7 +27,7 @@ class App extends React.Component {
     super(props, context);
     const { dispatch } = this.props;
       this.actions = bindActionCreators({
-        pushState,
+        updatePath,
         ...actions
       }, dispatch);
   }
@@ -40,7 +40,7 @@ class App extends React.Component {
     if (title) {
       node.value = "";
       const onSuccess = (result) => {
-          this.actions.pushState(null, `/movie/${result.data.imdbID}/`);
+          this.actions.updatePath(`/movie/${result.data.imdbID}/`);
       }
       this.actions.addMovie(title, onSuccess);
     }

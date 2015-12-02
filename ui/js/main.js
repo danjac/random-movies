@@ -1,6 +1,7 @@
 import React from 'react';
-import { Route } from 'react-router';
-import { ReduxRouter } from 'redux-router';
+import { Route, Router } from 'react-router';
+import createHashHistory from 'history/lib/createHashHistory';
+import { syncReduxAndRouter } from 'redux-simple-router';
 import { Provider } from 'react-redux';
 import { DevTools, DebugPanel, LogMonitor } from 'redux-devtools/lib/react';
 
@@ -10,7 +11,10 @@ import { App } from './containers';
 import * as actions from './actions';
 import configureStore from './store';
 
+const history = createHashHistory();
 const store = configureStore();
+
+syncReduxAndRouter(history, store);
 
 function getRandomMovie() {
   store.dispatch(actions.getRandomMovie());
@@ -41,13 +45,13 @@ class Container extends React.Component {
     <Provider store={store}>
       {() => {
       return (
-        <ReduxRouter>
+        <Router history={history}>
           <Route component={App} onEnter={() => console.log("onenter app")}>
             <Route path="/" component={Movie} onEnter={getRandomMovie} onLeave={resetMovie} />
             <Route path="/all/" component={MovieList} onEnter={getMovies} />
             <Route path="/movie/:id/" component={Movie} onEnter={getMovie} onLeave={resetMovie} />
           </Route>
-        </ReduxRouter>
+        </Router>
         );
       }}
     </Provider>

@@ -1,5 +1,5 @@
 import { combineReducers } from 'redux';
-import { routerStateReducer } from 'redux-router';
+import { routeReducer } from 'redux-simple-router';
 
 import ActionTypes from './actionTypes';
 
@@ -57,5 +57,5 @@ function mainReducer(state=initialState, action) {
 
 export default combineReducers({
   main: mainReducer,
-  router: routerStateReducer
+  routing: routeReducer
 });
