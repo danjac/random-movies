@@ -7,7 +7,7 @@ require('es6-promise').polyfill();
 
 var env = process.env.WEBPACK_ENV;
 
-var entry = ['babel-polyfill', './js/main.js'];
+var entry = ['babel-polyfill', './main.js'];
 
 var plugins = [
   new ExtractTextPlugin('[name].css', {
@@ -52,7 +52,7 @@ module.exports = {
         query: {
           presets: ['react', 'es2015', 'stage-0']
         },
-        include: path.join(__dirname, 'ui/js'),
+        include: path.join(__dirname, 'ui'),
         exclude: path.join(__dirname, 'node_modules')
       }
     ]
