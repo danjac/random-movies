@@ -12,8 +12,8 @@
     <div class="col-md-9" v-if="loaded">
         <h2>{{movie.Title}}</h2> 
         <h3 v-if="rating">
-            <span v-for="star in stars" class="glyphicon glyphicon-star"></span>
-            <span v-for="star in emptyStars" class="glyphicon glyphicon-star-empty"></span>
+            <glyph v-for="star in stars" icon="star"></glyph>
+            <glyph v-for="star in emptyStars" icon="star-empty"></glyph>
             &nbsp; {{rating}} <a target="_blank" href="http://www.imdb.com/title/{{movie.imdbID}}"><small>IMDB</small></a>
         </h3>
         <dl class="dl-unstyled">
@@ -27,13 +27,13 @@
           <p class="well">{{movie.Plot}}</p>
           <div class="button-group">
             <button v-on:click="getRandom" class="btn btn-primary">
-                <span class="glyphicon glyphicon-random"></span> Random
+                <glyph icon="random"></glyph>&nbsp; Random
             </button>
             <a v-link="{ path: '/all' }" class="btn btn-default">
-                <span class="glyphicon glyphicon-list"></span> See all
+                <glyph icon="list"></glyph>&nbsp; See all
             </a>
             <button v-on:click="deleteMovie" class="btn btn-danger">
-                <span class="glyphicon glyphicon-trash"></span> Delete
+                <glyph icon="trash"></glyph>&nbsp; Delete
             </button>
           </div>
     </div>

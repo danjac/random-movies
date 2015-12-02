@@ -20,7 +20,7 @@
                    v-model="title" />
         </div>
         <button class="btn btn-primary form-control" type="submit">
-            <span class="glyphicon glyphicon-plus"></span> Add
+            <glyph icon="plus"></glyph>&nbsp;Add
         </button>
     </form>
     <!-- main view -->

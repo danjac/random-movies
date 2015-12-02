@@ -5,9 +5,14 @@ import Router from 'vue-router';
 import App from './components/App.vue';
 import Movie from './components/Movie.vue';
 import MovieList from './components/MovieList.vue';
+import Glyphicon from './components/widgets/Glyphicon.vue';
 
 Vue.use(Router);
 Vue.use(Resource);
+
+// widgets
+//
+Vue.component('glyph', Glyphicon);
 
 Vue.http.headers.common['X-CSRF-Token'] = window.csrfToken;
 
