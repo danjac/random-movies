@@ -33,6 +33,7 @@
     </div>
 </template>
 <script>
+import * as api from '../api';
 import store from '../store';
 
 export default {
@@ -57,17 +58,22 @@ export default {
             store.deleteAlert(alert.id);
         },
         addMovie(event) {
-            const title = this.title;
+            event.preventDefault();
+            const title = this.title.trim();
             this.title = "";
-            this.$http.post("/api/", { title: title }, movie => {
+            if (!title) {
+                return;
+            }
+            api
+            .addMovie(this.$http, title)
+            .then(movie => {
                 if (movie) {
                     store.createAlert('New movie added', 'success');
                     this.$route.router.go(`/movie/${movie.imdbID}`);
                 }
-            }, {
-                error() {
-                    store.createAlert("Sorry, couldn't find this movie", 'warning');
-                }
+            })
+            .catch(() => {
+                store.createAlert("Sorry, couldn't find this movie", 'warning');
             });
         }
     }

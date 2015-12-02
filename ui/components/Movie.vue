@@ -43,6 +43,7 @@
 
 <script>
 import _ from 'lodash';
+import * as api from '../api';
 import store from '../store';
 
 export default {
@@ -73,14 +74,16 @@ export default {
         data({ to }) {
             const id = to.params.id;
             if (id) {
-                return this.$http.get(`/api/movie/${id}`, movie => {
+                return api.getMovie(this.$http, id)
+                .then(movie => {
                     return {
                         movie,
                         loaded: true
                     };
                 });
             } else {
-                return this.$http.get("/api/", movie => {
+                return api.getRandomMovie(this.$http)
+                .then(movie => {
                     return {
                         movie,
                         loaded: true
@@ -95,10 +98,14 @@ export default {
     },
     methods: {
         getRandom(event) {
-            this.$http.get("/api/", movie => { this.movie = movie; });
+            api
+            .getRandomMovie(this.$http)
+            .then(movie => this.movie = movie);
         },
         deleteMovie(event) {
-            this.$http.delete(`/api/movie/${this.movie.imdbID}`, () => {
+            api
+            .deleteMovie(this.$http, this.movie.imdbID)
+            .then(() => {
                 store.createAlert('Movie has been deleted', 'info');
                 this.$route.router.go("/all");
             });
