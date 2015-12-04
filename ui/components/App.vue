@@ -7,8 +7,9 @@
         <button type="button" 
                 class="close" 
                 data-dismiss="alert" 
-                aria-label="Close">
-            <span aria-hidden="true" @click="removeAlert(alert)">&times;</span>
+                aria-label="Close" 
+                @click="removeAlert(alert, $event)">
+            <span aria-hidden="true">&times;</span>
         </button>
         {{alert.msg}}
     </div>
@@ -53,7 +54,8 @@ export default {
         update(event) {
             this.alerts = store.getAlerts();
         },
-        removeAlert(alert) {
+        removeAlert(alert, event) {
+            event.preventDefault();
             store.deleteAlert(alert.id);
         },
         addMovie(event) {

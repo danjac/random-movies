@@ -73,7 +73,8 @@ export default {
         data({ to }) {
             const id = to.params.id;
             if (id) {
-                return this.$api.getMovie(id)
+                return this.$api
+                .getMovie(id)
                 .then(movie => {
                     return {
                         movie,
@@ -81,7 +82,8 @@ export default {
                     };
                 });
             } else {
-                return this.$api.getRandomMovie()
+                return this.$api
+                .getRandomMovie()
                 .then(movie => {
                     return {
                         movie,
@@ -97,11 +99,13 @@ export default {
     },
     methods: {
         getRandom(event) {
+            event.preventDefault();
             this.$api
             .getRandomMovie()
             .then(movie => this.movie = movie);
         },
         deleteMovie(event) {
+            event.preventDefault();
             this.$api
             .deleteMovie(this.movie.imdbID)
             .then(() => {
