@@ -22,12 +22,15 @@ const router = new Router();
 
 router.map({
   '/': {
+    name: 'default',
     component: Movie
   },
   '/movie/:id/': {
+    name: 'movie',
     component: Movie
   },
   '/all': {
+    name: 'list',
     component: MovieList
   }
 });

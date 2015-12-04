@@ -108,7 +108,7 @@ export default {
             .deleteMovie(this.movie.imdbID)
             .then(() => {
                 store.createAlert('Movie has been deleted', 'info');
-                this.$route.router.go("/all");
+                this.$route.router.go({ name: 'list' });
             });
         }
     }

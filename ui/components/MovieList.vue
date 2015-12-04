@@ -7,7 +7,7 @@
                     <h3>{{group.initial}}</h3>
                     <ul class="list-unstyled">
                         <li v-for="movie in group.movies">
-                            <a v-link="{ path: '/movie/' + movie.imdbID}">{{movie.Title}}</a>
+                            <a v-link="{name: 'movie', params: { id: movie.imdbID }}">{{movie.Title}}</a>
                         </li>
                     </ul>
                 </div>

@@ -68,7 +68,7 @@ export default {
             .then(movie => {
                 if (movie) {
                     store.createAlert('New movie added', 'success');
-                    this.$route.router.go(`/movie/${movie.imdbID}`);
+                    this.$route.router.go({name: 'movie', params: { id: movie.imdbID }});
                 }
             })
             .catch(() => {
