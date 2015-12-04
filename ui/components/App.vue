@@ -8,12 +8,12 @@
                 class="close" 
                 data-dismiss="alert" 
                 aria-label="Close" 
-                @click="removeAlert(alert, $event)">
+                @click.prevent="removeAlert(alert)">
             <span aria-hidden="true">&times;</span>
         </button>
         {{alert.msg}}
     </div>
-    <form class="form form-horizontal" @submit="addMovie">
+    <form class="form form-horizontal" @submit.prevent="addMovie">
         <div class="form-group">
             <input class="form-control" 
                    type="text" 
@@ -54,12 +54,10 @@ export default {
         update(event) {
             this.alerts = store.getAlerts();
         },
-        removeAlert(alert, event) {
-            event.preventDefault();
+        removeAlert(alert) {
             store.deleteAlert(alert.id);
         },
         addMovie(event) {
-            event.preventDefault();
             const title = this.title.trim();
             this.title = "";
             if (!title) {

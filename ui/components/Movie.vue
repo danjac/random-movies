@@ -26,13 +26,13 @@
           </dl>
           <p class="well">{{movie.Plot}}</p>
           <div class="button-group">
-            <button @click="getRandom" class="btn btn-primary">
+            <button @click.prevent="getRandom" class="btn btn-primary">
                 <glyph icon="random"></glyph>&nbsp; Random
             </button>
             <a v-link="{ path: '/all' }" class="btn btn-default">
                 <glyph icon="list"></glyph>&nbsp; See all
             </a>
-            <button @click="deleteMovie" class="btn btn-danger">
+            <button @click.prevent="deleteMovie" class="btn btn-danger">
                 <glyph icon="trash"></glyph>&nbsp; Delete
             </button>
           </div>
@@ -99,13 +99,11 @@ export default {
     },
     methods: {
         getRandom(event) {
-            event.preventDefault();
             this.$api
             .getRandomMovie()
             .then(movie => this.movie = movie);
         },
         deleteMovie(event) {
-            event.preventDefault();
             this.$api
             .deleteMovie(this.movie.imdbID)
             .then(() => {
