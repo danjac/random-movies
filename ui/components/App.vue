@@ -8,11 +8,11 @@
                 class="close" 
                 data-dismiss="alert" 
                 aria-label="Close">
-            <span aria-hidden="true" v-on:click="removeAlert(alert)">&times;</span>
+            <span aria-hidden="true" @click="removeAlert(alert)">&times;</span>
         </button>
         {{alert.msg}}
     </div>
-    <form class="form form-horizontal" v-on:submit="addMovie">
+    <form class="form form-horizontal" @submit="addMovie">
         <div class="form-group">
             <input class="form-control" 
                    type="text" 
@@ -33,7 +33,6 @@
     </div>
 </template>
 <script>
-import * as api from '../api';
 import store from '../store';
 
 export default {
@@ -64,8 +63,8 @@ export default {
             if (!title) {
                 return;
             }
-            api
-            .addMovie(this.$http, title)
+            this.$api
+            .addMovie(title)
             .then(movie => {
                 if (movie) {
                     store.createAlert('New movie added', 'success');

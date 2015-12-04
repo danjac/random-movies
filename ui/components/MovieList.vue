@@ -56,7 +56,9 @@ export default {
     },
     route: {
         data() {
-            return this.$http.get("/api/all/", (data) => {
+            return this.$api
+            .getMovies()
+            .then(data => {
                 return {
                     total: data.length,
                     rows: regroup(data)

@@ -5,8 +5,8 @@
         <span v-if="movie.Poster === 'N/A'">No poster available</span>
         <img v-else 
              class="img-responsive" 
-             v-bind:src="movie.Poster" 
-             v-bind:alt="movie.Title" />
+             :src="movie.Poster" 
+             :alt="movie.Title" />
     </div>
 
     <div class="col-md-9" v-if="loaded">
@@ -26,13 +26,13 @@
           </dl>
           <p class="well">{{movie.Plot}}</p>
           <div class="button-group">
-            <button v-on:click="getRandom" class="btn btn-primary">
+            <button @click="getRandom" class="btn btn-primary">
                 <glyph icon="random"></glyph>&nbsp; Random
             </button>
             <a v-link="{ path: '/all' }" class="btn btn-default">
                 <glyph icon="list"></glyph>&nbsp; See all
             </a>
-            <button v-on:click="deleteMovie" class="btn btn-danger">
+            <button @click="deleteMovie" class="btn btn-danger">
                 <glyph icon="trash"></glyph>&nbsp; Delete
             </button>
           </div>
@@ -43,7 +43,6 @@
 
 <script>
 import _ from 'lodash';
-import * as api from '../api';
 import store from '../store';
 
 export default {
@@ -74,7 +73,7 @@ export default {
         data({ to }) {
             const id = to.params.id;
             if (id) {
-                return api.getMovie(this.$http, id)
+                return this.$api.getMovie(id)
                 .then(movie => {
                     return {
                         movie,
@@ -82,7 +81,7 @@ export default {
                     };
                 });
             } else {
-                return api.getRandomMovie(this.$http)
+                return this.$api.getRandomMovie()
                 .then(movie => {
                     return {
                         movie,
@@ -98,13 +97,13 @@ export default {
     },
     methods: {
         getRandom(event) {
-            api
-            .getRandomMovie(this.$http)
+            this.$api
+            .getRandomMovie()
             .then(movie => this.movie = movie);
         },
         deleteMovie(event) {
-            api
-            .deleteMovie(this.$http, this.movie.imdbID)
+            this.$api
+            .deleteMovie(this.movie.imdbID)
             .then(() => {
                 store.createAlert('Movie has been deleted', 'info');
                 this.$route.router.go("/all");
