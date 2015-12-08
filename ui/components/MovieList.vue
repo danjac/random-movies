@@ -1,12 +1,12 @@
 <template>
     <div>
         <h3>Total {{total}} movies</h3>
-        <div v-for="row in rows" class="row" track-by="$index">
-           <div v-for="col in row" class="col-md-3" track-by="$index">
-                <div v-for="group in col" track-by="$index">
+        <div v-for="row in rows" class="row">
+           <div v-for="col in row" class="col-md-3">
+                <div v-for="group in col">
                     <h3>{{group.initial}}</h3>
                     <ul class="list-unstyled">
-                        <li v-for="movie in group.movies" track-by="imdbID">
+                        <li v-for="movie in group.movies">
                             <a v-link="{name: 'movie', params: { id: movie.imdbID }}">{{movie.Title}}</a>
                         </li>
                     </ul>

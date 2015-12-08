@@ -20,7 +20,7 @@ store.deleteAlert = (id) => {
 store.createAlert = (msg, type) => {
   const id = _.uniqueId();
   alerts.splice(0, 0, { msg, type, id });
-  window.setTimeout(() => store.deleteAlert(id), 6000);
+  window.setTimeout(() => store.deleteAlert(id), 3000);
   store.emit("alerts-changed");
 };
 
