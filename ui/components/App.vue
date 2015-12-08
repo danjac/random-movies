@@ -3,6 +3,7 @@
     <h1>Random movies</h1>
     <div v-for="alert in alerts" 
          class="alert alert-dismissable alert-{{alert.type}}" 
+         track-by="id"
          role="alert">
         <button type="button" 
                 class="close" 
