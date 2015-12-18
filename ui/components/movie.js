@@ -13,7 +13,7 @@ import {
 import { bindActionCreators } from 'redux';
 
 import { connect } from 'react-redux';
-import { updatePath } from 'redux-simple-router'
+import { pushPath } from 'redux-simple-router'
 
 import * as actions from '../actions';
 
@@ -25,12 +25,12 @@ export class Movie extends React.Component {
 
   constructor(props) {
     super(props);
-    this.actions = bindActionCreators({ updatePath, ...actions}, this.props.dispatch);
+    this.actions = bindActionCreators({ pushPath, ...actions}, this.props.dispatch);
   }
 
   deleteMovie() {
     this.actions.deleteMovie(this.props.movie.imdbID);
-    this.actions.updatePath("/all/");
+    this.actions.pushPath("/all/");
   }
 
   renderStars() {
@@ -92,6 +92,6 @@ export class Movie extends React.Component {
 
 export default connect(state => {
   return {
-    movie: state.main.movie,
+    movie: state.movie,
   };
 })(Movie);

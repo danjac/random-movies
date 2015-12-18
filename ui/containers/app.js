@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react';
-import { updatePath } from 'redux-simple-router'
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -26,10 +25,7 @@ class App extends React.Component {
   constructor(props, context) {
     super(props, context);
     const { dispatch } = this.props;
-      this.actions = bindActionCreators({
-        updatePath,
-        ...actions
-      }, dispatch);
+    this.actions = bindActionCreators(actions, dispatch);
   }
 
   addMovie(event) {
@@ -39,10 +35,7 @@ class App extends React.Component {
 
     if (title) {
       node.value = "";
-      const onSuccess = (result) => {
-          this.actions.updatePath(`/movie/${result.data.imdbID}/`);
-      }
-      this.actions.addMovie(title, onSuccess);
+      this.actions.addMovie(title);
     }
   }
 
@@ -64,11 +57,14 @@ class App extends React.Component {
   render() {
     return (
       <div className="container">
-        {this.props.messages.map((msg, index) => {
-        const dismissAlert = (index) => { this.actions.dismissMessage(index); };
+        {this.props.messages.map(msg => {
+        const dismissAlert = () => { this.actions.dismissMessage(msg.id); };
         return (
-        <Alert key={index} bsStyle={msg.status} onDismiss={dismissAlert} dismissAfter={3000}>
-          <p>{msg.msg}</p>
+        <Alert key={msg.id}
+               bsStyle={msg.status}
+               onDismiss={dismissAlert}
+               dismissAfter={3000}>
+          <p>{msg.message}</p>
         </Alert>
           );
         })}
@@ -82,7 +78,7 @@ class App extends React.Component {
 
 export default connect(state => {
   return {
-      messages: state.main.messages,
+      messages: state.messages,
       router: state.router
   };
 })(App);

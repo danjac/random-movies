@@ -1,24 +1,81 @@
-import { createAction } from 'redux-actions';
+import _ from 'lodash';
+
+import { pushPath } from 'redux-simple-router';
 
 import ActionTypes from './actionTypes';
 import * as WebAPI from './api';
 
-export const getMovie = createAction(ActionTypes.GET_MOVIE, id => WebAPI.getMovie(id));
+export function addMessage(status, message) {
+  return {
+    type: ActionTypes.ADD_MESSAGE,
+    message: {
+      status,
+      message,
+      id: _.uniqueId()
+    }
+  };
+}
 
-export const addMovie = createAction(ActionTypes.ADD_MOVIE, async (title, onSuccess) => {
-  const result = await WebAPI.addMovie(title);
-  if (result) {
-    onSuccess(result);
+export function dismissMessage(id) {
+  return {
+    type: ActionTypes.DISMISS_MESSAGE,
+    id
+  };
+}
+
+export function getMovie(id) {
+  return (dispatch) => {
+    WebAPI
+    .getMovie(id).then(result => dispatch({
+      type: ActionTypes.MOVIE_LOADED,
+      movie: result.data
+    }))
+    .catch(() => {
+      dispatch(addMessage("danger", "Sorry, no movie found"));
+      dispatch(pushPath("/all/"));
+    });
   }
-  return result;
-});
+}
 
-export const dismissMessage = createAction(ActionTypes.DISMISS_MESSAGE);
+export function addMovie(title) {
+  return (dispatch) => {
+    WebAPI
+    .addMovie(title)
+    .then(result => {
+      dispatch(addMessage("success", "New movie added"));
+      dispatch(pushPath(`/movie/${result.data.imdbID}/`));
+    });
+  }
+}
 
-export const resetMovie = createAction(ActionTypes.RESET_MOVIE);
+export function deleteMovie(movie) {
+  return (dispatch) => {
+    dispatch(addMessage("info", "Movie deleted"));
+    WebAPI.deleteMovie(movie)
+  }
+}
 
-export const deleteMovie = createAction(ActionTypes.DELETE_MOVIE, WebAPI.deleteMovie);
+export function getMovies() {
+  return (dispatch) => {
+    WebAPI.getMovies()
+    .then(result => {
+      dispatch({
+        type: ActionTypes.MOVIES_LOADED,
+        movies: result.data
+      });
+    });
+  }
+}
 
-export const getMovies = createAction(ActionTypes.GET_MOVIES, WebAPI.getMovies)
-
-export const getRandomMovie = createAction(ActionTypes.GET_RANDOM_MOVIE, WebAPI.getRandomMovie)
+export function getRandomMovie() {
+  return (dispatch) => {
+    WebAPI
+    .getRandomMovie()
+    .then(result => {
+      dispatch({
+        type: ActionTypes.MOVIE_LOADED,
+        movie: result.data
+      });
+    });
+  }
+}

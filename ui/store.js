@@ -1,7 +1,6 @@
 import { createStore, applyMiddleware, compose } from 'redux';
 import thunkMiddleware from 'redux-thunk';
 import createLogger from 'redux-logger';
-import promiseMiddleware from 'redux-promise';
 import { devTools, persistState } from 'redux-devtools';
 
 import reducer from './reducer';
@@ -12,16 +11,15 @@ const loggingMiddleware = createLogger({
   logger: console
 });
 
-const createAppStore = compose(
+const createStoreWithMiddleware = compose(
   applyMiddleware(
     thunkMiddleware,
-    loggingMiddleware,
-    promiseMiddleware
+    loggingMiddleware
   ),
   devTools(),
   persistState(window.location.href.match(/[?&]debug_session=([^&]+)\b/))
 )(createStore);
 
 export default function configureStore(initialState) {
-  return createAppStore(reducer, initialState);
+  return createStoreWithMiddleware(reducer, initialState);
 }

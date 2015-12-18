@@ -28,10 +28,6 @@ function getMovie(location) {
   store.dispatch(actions.getMovie(location.params.id));
 }
 
-function resetMovie() {
-  store.dispatch(actions.resetMovie());
-}
-
 const debugPanel = window.__ENV__ === "dev!" && (
   <DebugPanel top right bottom>
       <DevTools store={store} monitor={LogMonitor} />
@@ -47,9 +43,9 @@ class Container extends React.Component {
       return (
         <Router history={history}>
           <Route component={App} onEnter={() => console.log("onenter app")}>
-            <Route path="/" component={Movie} onEnter={getRandomMovie} onLeave={resetMovie} />
+            <Route path="/" component={Movie} onEnter={getRandomMovie} />
             <Route path="/all/" component={MovieList} onEnter={getMovies} />
-            <Route path="/movie/:id/" component={Movie} onEnter={getMovie} onLeave={resetMovie} />
+            <Route path="/movie/:id/" component={Movie} onEnter={getMovie} />
           </Route>
         </Router>
         );
