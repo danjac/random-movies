@@ -67,6 +67,13 @@ export function getMovies() {
   }
 }
 
+export function clearMovie() {
+  return {
+    type: ActionTypes.MOVIE_LOADED,
+    movie: null
+  };
+}
+
 export function getRandomMovie() {
   return (dispatch) => {
     WebAPI
