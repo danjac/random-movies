@@ -44,6 +44,9 @@ export function addMovie(title) {
     .then(result => {
       dispatch(addMessage("success", "New movie added"));
       dispatch(pushPath(`/movie/${result.data.imdbID}/`));
+    })
+    .catch(() => {
+      dispatch(addMessage("danger", `Sorry, couldn't find the movie "${title}"`));
     });
   }
 }
