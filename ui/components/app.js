@@ -21,11 +21,6 @@ import * as actions from '../actions';
 
 class App extends React.Component {
 
-  static propTypes = {
-    dispatch: PropTypes.func.isRequired,
-    children: PropTypes.node
-  }
-
   constructor(props, context) {
     super(props, context);
     const { dispatch } = this.props;
@@ -115,6 +110,11 @@ class App extends React.Component {
       </div>
     );
   }
+}
+
+App.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  children: PropTypes.node
 }
 
 export default connect(state => {

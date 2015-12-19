@@ -50,22 +50,7 @@ const InitialGroup = props => {
   );
 };
 
-function normalizeTitle(title) {
-    const lower = title.toLowerCase();
-    ["the", "a", "an"].forEach(a => {
-      if (lower.startsWith(a + " ")) {
-        return lower.substring(a.length + 1);
-      }
-    });
-    return lower;
-}
-
-
 class MovieList extends React.Component {
-
-  static propTypes = {
-    dispatch: PropTypes.func.isRequired
-  }
 
   constructor(props) {
     super(props);
@@ -75,7 +60,7 @@ class MovieList extends React.Component {
 
   render() {
 
-    const movies = _.sortBy(this.props.movies, movie => normalizeTitle(movie.Title));
+    const movies = _.sortBy(this.props.movies);
     const groups = _.groupBy(movies, movie => getInitial(movie.Title));
     const cols = _.chunk(_.sortBy(Object.keys(groups)), 4);
     const rows = _.chunk(cols, 4);
@@ -103,6 +88,11 @@ class MovieList extends React.Component {
   }
 
 }
+
+MovieList.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  movies: PropTypes.array
+};
 
 export default connect(state => {
   return {

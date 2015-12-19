@@ -20,10 +20,6 @@ import * as actions from '../actions';
 
 export class Movie extends React.Component {
 
-  static propTypes = {
-    dispatch: PropTypes.func.isRequired
-  }
-
   constructor(props) {
     super(props);
     this.actions = bindActionCreators({ pushPath, ...actions}, this.props.dispatch);
@@ -108,6 +104,11 @@ export class Movie extends React.Component {
     );
   }
 
+}
+
+Movie.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  movie: PropTypes.object
 }
 
 export default connect(state => {
