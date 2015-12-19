@@ -6,9 +6,7 @@ import { bindActionCreators } from 'redux';
 
 import * as actions from './actions';
 
-import { Movie, MovieList } from './components';
-import { App } from './containers';
-
+import { App, Movie, MovieList } from './components';
 
 class Routes extends React.Component {
 

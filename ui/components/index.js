@@ -1,5 +1,5 @@
+import App from './app';
 import Movie from './movie';
 import MovieList from './list';
 
-export { Movie, MovieList };
-
+export { App, Movie, MovieList };

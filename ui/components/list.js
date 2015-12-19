@@ -82,7 +82,7 @@ class MovieList extends React.Component {
 
     return (
       <div>
-        <h3>Total {movies.length} movies</h3>
+        {movies.length ? <h3>Total {movies.length} movies</h3> : ''}
         <Grid>
         {rows.map((row, index) => {
           return (
