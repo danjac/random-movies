@@ -7,28 +7,32 @@ import (
 	"github.com/danjac/random_movies/errors"
 	"github.com/danjac/random_movies/omdb"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/justinas/nosurf"
 	"github.com/unrolled/render"
 	"net/http"
+	"time"
 )
 
 func New(db database.DB, log *logrus.Logger, config *Config) *Server {
 	return &Server{
-		DB:     db,
-		OMDB:   omdb.New(),
-		Render: render.New(),
-		Log:    log,
-		Config: config,
+		DB:       db,
+		OMDB:     omdb.New(),
+		Render:   render.New(),
+		Log:      log,
+		Config:   config,
+		Upgrader: websocket.Upgrader{},
 	}
 }
 
 // context globals (not threadsafe, so only store thread-safe objects here)
 type Server struct {
-	Config *Config
-	OMDB   omdb.Finder
-	Render *render.Render
-	DB     database.DB
-	Log    *logrus.Logger
+	Config   *Config
+	OMDB     omdb.Finder
+	Render   *render.Render
+	DB       database.DB
+	Log      *logrus.Logger
+	Upgrader websocket.Upgrader
 }
 
 type Config struct {
@@ -72,6 +76,7 @@ func (s *Server) Router() *mux.Router {
 
 	api.HandleFunc("/", s.getRandomMovie).Methods("GET")
 	api.HandleFunc("/", s.addMovie).Methods("POST")
+	api.HandleFunc("/suggest", s.suggest)
 	api.HandleFunc("/movie/{id}", s.getMovie).Methods("GET")
 	api.HandleFunc("/movie/{id}", s.deleteMovie).Methods("DELETE")
 	api.HandleFunc("/all/", s.getMovies).Methods("GET")
@@ -108,6 +113,34 @@ func (s *Server) getRandomMovie(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.Render.JSON(w, http.StatusOK, movie)
+}
+
+func (s *Server) suggest(w http.ResponseWriter, r *http.Request) {
+
+	c, err := s.Upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		s.Abort(w, r, err)
+		return
+	}
+	defer c.Close()
+
+	s.Log.Info("Socket started")
+
+	for {
+
+		movie, err := s.DB.GetRandom()
+
+		if err != nil {
+			s.Log.Error(err.Error())
+			continue
+		}
+		if err := c.WriteJSON(movie); err != nil {
+			s.Log.Error(err.Error())
+			break
+		}
+		time.Sleep(15 * time.Second)
+	}
+
 }
 
 func (s *Server) getMovie(w http.ResponseWriter, r *http.Request) {

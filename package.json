@@ -21,8 +21,10 @@
     "react-redux": "^2.1.2",
     "react-router": "^1.0.2",
     "redux": "^3.0.0",
+    "redux-actions": "^0.9.0",
     "redux-devtools": "^2.1.5",
     "redux-logger": "^1.0.9",
+    "redux-promise": "^0.5.0",
     "redux-simple-router": "^1.0.1",
     "redux-thunk": "^1.0.0"
   },

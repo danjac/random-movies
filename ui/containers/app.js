@@ -1,4 +1,5 @@
 import React, { PropTypes } from 'react';
+import { Link } from 'react-router';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -7,7 +8,10 @@ import {
   Button,
   ButtonInput,
   Glyphicon,
-  Alert
+  Alert,
+  Grid,
+  Row,
+  Col
 } from 'react-bootstrap';
 
 import { bindActionCreators } from 'redux';
@@ -41,7 +45,8 @@ class App extends React.Component {
 
   renderForm() {
     return (
-      <form className="form form-horizontal" onSubmit={this.addMovie.bind(this)}>
+      <div className="container">
+        <form className="form form-horizontal" onSubmit={this.addMovie.bind(this)}>
         <Input
           type="text"
           ref="title"
@@ -51,24 +56,60 @@ class App extends React.Component {
           className="form-control"
           type="submit"><Glyphicon glyph="plus" /> Add</Button>
         </form>
+      </div>
+    );
+  }
+
+  renderHeader() {
+    return (
+        <div className="page-header">
+          <Grid>
+            <Row>
+              <Col xs={6} md={6}>
+          <h1><Glyphicon glyph="film" /> Random movies</h1>
+              </Col>
+              <Col xs={6} md={6} className="text-right">
+              {this.renderSuggestion()}
+              </Col>
+            </Row>
+        </Grid>
+        </div>
+    );
+  }
+
+  renderSuggestion() {
+    const movie = this.props.suggestion;
+    if (!movie) return '';
+    return (
+      <small>
+        <b>Have you seen?</b> <Link to={`/movie/${movie.imdbID}/`}>{movie.Title} ({movie.Year}) </Link>
+      </small>
+    );
+  }
+
+  renderAlerts() {
+    return (
+      <div className="container">
+        {this.props.messages.map(msg => {
+          const dismissAlert = () => { this.actions.dismissMessage(msg.id); };
+          return (
+            <Alert key={msg.id}
+                   bsStyle={msg.status}
+                   onDismiss={dismissAlert}
+                   dismissAfter={3000}>
+              <p>{msg.message}</p>
+            </Alert>
+          );
+        })}
+      </div>
     );
   }
 
   render() {
     return (
       <div className="container">
-        {this.props.messages.map(msg => {
-        const dismissAlert = () => { this.actions.dismissMessage(msg.id); };
-        return (
-        <Alert key={msg.id}
-               bsStyle={msg.status}
-               onDismiss={dismissAlert}
-               dismissAfter={3000}>
-          <p>{msg.message}</p>
-        </Alert>
-          );
-        })}
-        <h1>Random movies</h1>
+        {this.renderHeader()}
+        {this.renderAlerts()}
         {this.renderForm()}
         {this.props.children}
       </div>
@@ -78,6 +119,7 @@ class App extends React.Component {
 
 export default connect(state => {
   return {
+      suggestion: state.suggestion,
       messages: state.messages,
       router: state.router
   };

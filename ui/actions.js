@@ -86,3 +86,10 @@ export function getRandomMovie() {
     });
   }
 }
+
+export function suggest(movie) {
+  return {
+    type: ActionTypes.NEW_SUGGESTION,
+    payload: movie
+  }
+}

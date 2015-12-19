@@ -23,9 +23,14 @@ function moviesReducer(state=[], action) {
   return action.type === ActionTypes.MOVIES_LOADED ? action.payload: state;
 }
 
+function suggestReducer(state=null, action) {
+  return action.type === ActionTypes.NEW_SUGGESTION ? action.payload: state;
+}
+
 export default combineReducers({
   movie: movieReducer,
   movies: moviesReducer,
+  suggestion: suggestReducer,
   messages: messagesReducer,
   routing: routeReducer
 });
