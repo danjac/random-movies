@@ -27,6 +27,40 @@ function getInitial(title) {
   return '-';
 }
 
+const ListItem = props => {
+    const { movie } = props;
+    return (
+      <li>
+        <Link to={`/movie/${movie.imdbID}/`}>{movie.Title}</Link> {movie.seen? <Glyphicon glyph="ok" /> : ''}
+      </li>
+    );
+};
+
+const InitialGroup = props => {
+  const { initial, group } = props;
+  return (
+    <div>
+      <h3>{initial}</h3>
+      <ul className="list-unstyled">
+        {group.map(movie => {
+          return <ListItem key={movie.imdbID} movie={movie} />;
+        })}
+      </ul>
+    </div>
+  );
+};
+
+function normalizeTitle(title) {
+    const lower = title.toLowerCase();
+    ["the", "a", "an"].forEach(a => {
+      if (lower.startsWith(a + " ")) {
+        return lower.substring(a.length + 1);
+      }
+    });
+    return lower;
+}
+
+
 class MovieList extends React.Component {
 
   static propTypes = {
@@ -40,43 +74,30 @@ class MovieList extends React.Component {
   }
 
   render() {
-    const movies = this.props.movies;
+
+    const movies = _.sortBy(this.props.movies, movie => normalizeTitle(movie.Title));
     const groups = _.groupBy(movies, movie => getInitial(movie.Title));
     const cols = _.chunk(_.sortBy(Object.keys(groups)), 4);
     const rows = _.chunk(cols, 4);
+
     return (
       <div>
         <h3>Total {movies.length} movies</h3>
+        <Grid>
         {rows.map((row, index) => {
           return (
-            <Grid>
             <Row key={index}>
               {row.map((col, index) => {
                 return (
                   <Col key={index} md={3}>
-                    {col.map((initial) => {
-                      return (
-                      <div key={initial}>
-                        <h3>{initial}</h3>
-                        <ul className="list-unstyled">
-                          {groups[initial].map(movie => {
-                          return (
-                            <li key={movie.imdbID}>
-                              <Link to={`/movie/${movie.imdbID}/`}>{movie.Title}</Link> {movie.seen? <Glyphicon glyph="ok" /> : ''}
-                            </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                      );
-                    })}
+                    {col.map(initial => <InitialGroup key={initial} group={groups[initial]} initial={initial} />)}
                   </Col>
                 );
               })}
             </Row>
-          </Grid>
           );
         })}
+        </Grid>
       </div>
     );
   }
@@ -84,10 +105,8 @@ class MovieList extends React.Component {
 }
 
 export default connect(state => {
-  let movies = state.movies;
-  movies.sort((left, right) => left.Title > right.Title ? 1 : (left.Title < right.Title ? -1 : 0));
   return {
-      movies: movies
+      movies: state.movies
   };
 })(MovieList);
 

@@ -66,7 +66,7 @@ class App extends React.Component {
           <Grid>
             <Row>
               <Col xs={6} md={6}>
-          <h1><Glyphicon glyph="film" /> Movie Wishlist</h1>
+                <h1><Glyphicon glyph="film" /> Movie Wishlist</h1>
               </Col>
               <Col xs={6} md={6} className="text-right">
               {this.renderSuggestion()}

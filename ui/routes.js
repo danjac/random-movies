@@ -1,37 +1,61 @@
 import React from 'react';
-import { Route } from 'react-router';
+import { connect } from 'react-redux';
+import { Router, Route } from 'react-router';
+
+import { bindActionCreators } from 'redux';
+
 import * as actions from './actions';
 
 import { Movie, MovieList } from './components';
 import { App } from './containers';
 
 
-export default function(store) {
+class Routes extends React.Component {
 
-  function getRandomMovie() {
-    store.dispatch(actions.getRandomMovie());
+  constructor(props) {
+    super(props);
+    this.actions = bindActionCreators(actions, this.props.dispatch);
   }
 
-  function getMovies() {
-    store.dispatch(actions.getMovies());
+  getRandomMovie() {
+    this.actions.getRandomMovie();
   }
 
-  function getMovie(location) {
-    store.dispatch(actions.getMovie(location.params.id));
+  getMovies() {
+    this.actions.getMovies();
   }
 
-  function clearMovie() {
-    store.dispatch(actions.clearMovie());
+  getMovie(location) {
+    this.actions.getMovie(location.params.id);
   }
 
+  clearMovie() {
+    this.actions.clearMovie();
+  }
 
-  return (
-      <Route component={App}>
-        <Route path="/" component={Movie} onEnter={getRandomMovie} />
-        <Route path="/all/" component={MovieList} onEnter={getMovies} onLeave={clearMovie}/>
-        <Route path="/movie/:id/" component={Movie} onEnter={getMovie} onLeave={clearMovie} />
-      </Route>
-  );
+  render() {
+    return (
+      <Router history={this.props.history}>
+        <Route component={App}>
+          <Route path="/"
+                 component={Movie}
+                 onEnter={this.getRandomMovie.bind(this)} />
 
+          <Route path="/all/"
+                 component={MovieList}
+                 onEnter={this.getMovies.bind(this)}
+                 onLeave={this.clearMovie.bind(this)}/>
 
+          <Route path="/movie/:id/"
+                 component={Movie}
+                 onEnter={this.getMovie.bind(this)}
+                 onLeave={this.clearMovie.bind(this)} />
+        </Route>
+      </Router>
+
+    );
+
+  };
 }
+
+export default connect()(Routes);

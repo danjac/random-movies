@@ -1,11 +1,11 @@
 import React from 'react';
-import { Router } from 'react-router';
+import ReactDOM from 'react-dom';
 import createHashHistory from 'history/lib/createHashHistory';
 import { syncReduxAndRouter } from 'redux-simple-router';
 import { Provider } from 'react-redux';
 import { DevTools, DebugPanel, LogMonitor } from 'redux-devtools/lib/react';
 
-import getRoutes from './routes';
+import Routes from './routes';
 import configureStore from './store';
 import { suggest } from './actions';
 
@@ -24,23 +24,12 @@ new WebSocket(`ws://${window.location.host}/api/suggest`).onmessage = event => {
   store.dispatch(suggest(JSON.parse(event.data)));
 };
 
-class Container extends React.Component {
-  render() {
-    return (
-    <div>
+const Container = props => {
+  return (
     <Provider store={store}>
-      {() => {
-        return (
-        <Router history={history}>
-          {getRoutes(store)}
-        </Router>
-        );
-      }}
+      <Routes history={history} />
     </Provider>
-    {debugPanel}
-    </div>
-    );
-  }
+  );
 }
 
-React.render(<Container />, document.body);
+ReactDOM.render(<Container />, document.getElementById("app"));

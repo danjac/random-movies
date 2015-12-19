@@ -146,11 +146,6 @@ func (s *Server) suggest(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		// only suggest movies we haven't seen
-		if movie.Seen {
-			continue
-		}
-
 		if err := c.WriteJSON(movie); err != nil {
 			s.Log.Error(err.Error())
 			break
