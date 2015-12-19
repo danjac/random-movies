@@ -16,7 +16,13 @@ function messagesReducer(state=[], action) {
 }
 
 function movieReducer(state=null, action) {
-  return action.type === ActionTypes.MOVIE_LOADED ? action.payload : state;
+  switch(action.type) {
+    case ActionTypes.MOVIE_LOADED:
+      return action.payload;
+    case ActionTypes.MARK_SEEN:
+      return state ? Object.assign({}, state, { seen: true }) : state;
+  }
+  return state;
 }
 
 function moviesReducer(state=[], action) {

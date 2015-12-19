@@ -21,6 +21,10 @@ export function deleteMovie(id) {
   return axios.delete(`/api/movie/${id}`);
 }
 
+export function markSeen(id) {
+  return axios.put(`/api/seen/${id}`);
+}
+
 export function addMovie(title) {
   return axios.post("/api/", { title: title });
 }

@@ -66,7 +66,7 @@ class App extends React.Component {
           <Grid>
             <Row>
               <Col xs={6} md={6}>
-          <h1><Glyphicon glyph="film" /> Random movies</h1>
+          <h1><Glyphicon glyph="film" /> Movie Wishlist</h1>
               </Col>
               <Col xs={6} md={6} className="text-right">
               {this.renderSuggestion()}
@@ -82,7 +82,7 @@ class App extends React.Component {
     if (!movie) return '';
     return (
       <small>
-        <b>Have you seen?</b> <Link to={`/movie/${movie.imdbID}/`}>{movie.Title} ({movie.Year}) </Link>
+        <b><em>Have you seen?</em></b> <Link to={`/movie/${movie.imdbID}/`}>{movie.Title} ({movie.Year}) </Link>
       </small>
     );
   }

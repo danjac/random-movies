@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+const SOCKET_WAIT_FOR = 15 * time.Second
+
 func New(db database.DB, log *logrus.Logger, config *Config) *Server {
 	return &Server{
 		DB:       db,
@@ -79,6 +81,7 @@ func (s *Server) Router() *mux.Router {
 	api.HandleFunc("/suggest", s.suggest)
 	api.HandleFunc("/movie/{id}", s.getMovie).Methods("GET")
 	api.HandleFunc("/movie/{id}", s.deleteMovie).Methods("DELETE")
+	api.HandleFunc("/seen/{id}", s.markSeen).Methods("PUT")
 	api.HandleFunc("/all/", s.getMovies).Methods("GET")
 
 	return router
@@ -101,6 +104,14 @@ func (s *Server) indexPage(w http.ResponseWriter, r *http.Request) {
 		"csrfToken":  csrfToken,
 	}
 	s.Render.HTML(w, http.StatusOK, "index", ctx)
+}
+
+func (s *Server) markSeen(w http.ResponseWriter, r *http.Request) {
+	if err := s.DB.MarkSeen(mux.Vars(r)["id"]); err != nil {
+		s.Abort(w, r, err)
+		return
+	}
+	s.Render.Text(w, http.StatusOK, "Movie seen")
 }
 
 func (s *Server) getRandomMovie(w http.ResponseWriter, r *http.Request) {
@@ -134,11 +145,18 @@ func (s *Server) suggest(w http.ResponseWriter, r *http.Request) {
 			s.Log.Error(err.Error())
 			continue
 		}
+
+		// only suggest movies we haven't seen
+		if movie.Seen {
+			continue
+		}
+
 		if err := c.WriteJSON(movie); err != nil {
 			s.Log.Error(err.Error())
 			break
 		}
-		time.Sleep(15 * time.Second)
+
+		time.Sleep(SOCKET_WAIT_FOR)
 	}
 
 }

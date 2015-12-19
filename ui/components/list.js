@@ -5,6 +5,14 @@ import { bindActionCreators } from 'redux';
 
 import { connect } from 'react-redux';
 
+import {
+  Glyphicon,
+  Grid,
+  Row,
+  Col
+} from 'react-bootstrap';
+
+
 import * as actions from '../actions';
 
 
@@ -41,10 +49,11 @@ class MovieList extends React.Component {
         <h3>Total {movies.length} movies</h3>
         {rows.map((row, index) => {
           return (
-            <div key={index} className="row">
+            <Grid>
+            <Row key={index}>
               {row.map((col, index) => {
                 return (
-                  <div key={index} className="col-md-3">
+                  <Col key={index} md={3}>
                     {col.map((initial) => {
                       return (
                       <div key={initial}>
@@ -53,7 +62,7 @@ class MovieList extends React.Component {
                           {groups[initial].map(movie => {
                           return (
                             <li key={movie.imdbID}>
-                              <Link to={`/movie/${movie.imdbID}/`}>{movie.Title}</Link>
+                              <Link to={`/movie/${movie.imdbID}/`}>{movie.Title}</Link> {movie.seen? <Glyphicon glyph="ok" /> : ''}
                             </li>
                             );
                           })}
@@ -61,10 +70,11 @@ class MovieList extends React.Component {
                       </div>
                       );
                     })}
-                  </div>
+                  </Col>
                 );
               })}
-            </div>
+            </Row>
+          </Grid>
           );
         })}
       </div>

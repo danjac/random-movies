@@ -13,6 +13,7 @@ type Movie struct {
 	Director string
 	Rating   string `json:"imdbRating"`
 	ImdbID   string `json:"imdbID"`
+	Seen     bool   `json:"seen"`
 }
 
 func (m *Movie) String() string {

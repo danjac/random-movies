@@ -14,6 +14,7 @@ type MovieGetter interface {
 
 type MovieStore interface {
 	Delete(string) error
+	MarkSeen(string) error
 	Save(*models.Movie) error
 }
 
@@ -75,6 +76,15 @@ func (db *defaultImpl) Get(imdbID string) (*models.Movie, error) {
 		}
 	}
 	return movie, nil
+}
+
+func (db *defaultImpl) MarkSeen(imdbID string) error {
+	movie, err := db.Get(imdbID)
+	if err != nil {
+		return err
+	}
+	movie.Seen = true
+	return db.Save(movie)
 }
 
 func (db *defaultImpl) Save(movie *models.Movie) error {

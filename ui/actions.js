@@ -54,7 +54,7 @@ export function addMovie(title) {
 export function deleteMovie(movie) {
   return (dispatch) => {
     dispatch(addMessage("info", "Movie deleted"));
-    WebAPI.deleteMovie(movie)
+    WebAPI.deleteMovie(movie.imdbID)
   }
 }
 
@@ -88,6 +88,13 @@ export function getRandomMovie() {
       });
     });
   }
+}
+
+export function markSeen(movie) {
+  WebAPI.markSeen(movie.imdbID);
+  return {
+    type: ActionTypes.MARK_SEEN
+  };
 }
 
 export function suggest(movie) {
