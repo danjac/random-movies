@@ -8,19 +8,19 @@ import ActionTypes from './actionTypes';
 function messagesReducer(state=[], action) {
   switch(action.type) {
     case ActionTypes.DISMISS_MESSAGE:
-      return _.reject(state, msg => action.id === msg.id);
+      return _.reject(state, msg => action.payload === msg.id);
     case ActionTypes.ADD_MESSAGE:
-      return state.concat(action.message);
+      return state.concat(action.payload);
   }
   return state;
 }
 
 function movieReducer(state=null, action) {
-  return action.type === ActionTypes.MOVIE_LOADED ? action.movie : state;
+  return action.type === ActionTypes.MOVIE_LOADED ? action.payload : state;
 }
 
 function moviesReducer(state=[], action) {
-  return action.type === ActionTypes.MOVIES_LOADED ? action.movies: state;
+  return action.type === ActionTypes.MOVIES_LOADED ? action.payload: state;
 }
 
 export default combineReducers({

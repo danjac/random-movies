@@ -8,7 +8,7 @@ import * as WebAPI from './api';
 export function addMessage(status, message) {
   return {
     type: ActionTypes.ADD_MESSAGE,
-    message: {
+    payload: {
       status,
       message,
       id: _.uniqueId()
@@ -19,7 +19,7 @@ export function addMessage(status, message) {
 export function dismissMessage(id) {
   return {
     type: ActionTypes.DISMISS_MESSAGE,
-    id
+    payload: id
   };
 }
 
@@ -28,7 +28,7 @@ export function getMovie(id) {
     WebAPI
     .getMovie(id).then(result => dispatch({
       type: ActionTypes.MOVIE_LOADED,
-      movie: result.data
+      payload: result.data
     }))
     .catch(() => {
       dispatch(addMessage("danger", "Sorry, no movie found"));
@@ -61,7 +61,7 @@ export function getMovies() {
     .then(result => {
       dispatch({
         type: ActionTypes.MOVIES_LOADED,
-        movies: result.data
+        payload: result.data
       });
     });
   }
@@ -70,7 +70,7 @@ export function getMovies() {
 export function clearMovie() {
   return {
     type: ActionTypes.MOVIE_LOADED,
-    movie: null
+    payload: null
   };
 }
 
@@ -81,7 +81,7 @@ export function getRandomMovie() {
     .then(result => {
       dispatch({
         type: ActionTypes.MOVIE_LOADED,
-        movie: result.data
+        payload: result.data
       });
     });
   }
