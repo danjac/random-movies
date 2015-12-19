@@ -81,7 +81,7 @@ func (s *Server) Router() *mux.Router {
 	api.HandleFunc("/suggest", s.suggest)
 	api.HandleFunc("/movie/{id}", s.getMovie).Methods("GET")
 	api.HandleFunc("/movie/{id}", s.deleteMovie).Methods("DELETE")
-	api.HandleFunc("/seen/{id}", s.markSeen).Methods("PUT")
+	api.HandleFunc("/seen/{id}", s.markSeen).Methods("PATCH")
 	api.HandleFunc("/all/", s.getMovies).Methods("GET")
 
 	return router

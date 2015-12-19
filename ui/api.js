@@ -22,7 +22,7 @@ export function deleteMovie(id) {
 }
 
 export function markSeen(id) {
-  return axios.put(`/api/seen/${id}`);
+  return axios.patch(`/api/seen/${id}`);
 }
 
 export function addMovie(title) {
