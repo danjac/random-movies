@@ -50,6 +50,10 @@ func (db *MockDB) Delete(imdbID string) error {
 	return nil
 }
 
+func (db *MockDB) MarkSeen(imdbID string) error {
+	return nil
+}
+
 func TestRandomMovie(t *testing.T) {
 	req, _ := http.NewRequest("GET", "", nil)
 	w := httptest.NewRecorder()
