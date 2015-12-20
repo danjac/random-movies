@@ -66,7 +66,7 @@ const Controls = props => {
 
 };
 
-class Movie extends React.Component {
+export class Movie extends React.Component {
 
   constructor(props) {
     super(props);

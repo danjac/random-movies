@@ -1,5 +1,0 @@
---compilers js:babel-register 
---require ./ui/spec/setup
---full-trace
---recursive ./ui/spec/**/*.js
-
