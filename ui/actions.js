@@ -5,6 +5,13 @@ import { pushPath } from 'redux-simple-router';
 import ActionTypes from './actionTypes';
 import * as WebAPI from './api';
 
+function movieLoaded(movie) {
+  return {
+      type: ActionTypes.MOVIE_LOADED,
+      payload: movie
+  };
+}
+
 export function addMessage(status, message) {
   return {
     type: ActionTypes.ADD_MESSAGE,
@@ -26,10 +33,8 @@ export function dismissMessage(id) {
 export function getMovie(id) {
   return (dispatch) => {
     WebAPI
-    .getMovie(id).then(result => dispatch({
-      type: ActionTypes.MOVIE_LOADED,
-      payload: result.data
-    }))
+    .getMovie(id)
+    .then(result => dispatch(movieLoaded(result.data)))
     .catch(() => {
       dispatch(addMessage("danger", "Sorry, no movie found"));
       dispatch(pushPath("/all/"));
@@ -42,6 +47,7 @@ export function addMovie(title) {
     WebAPI
     .addMovie(title)
     .then(result => {
+      dispatch(movieLoaded(result.data));
       dispatch(addMessage("success", "New movie added"));
       dispatch(pushPath(`/movie/${result.data.imdbID}/`));
     })
@@ -71,22 +77,14 @@ export function getMovies() {
 }
 
 export function clearMovie() {
-  return {
-    type: ActionTypes.MOVIE_LOADED,
-    payload: null
-  };
+  return movieLoaded(null);
 }
 
 export function getRandomMovie() {
   return (dispatch) => {
     WebAPI
     .getRandomMovie()
-    .then(result => {
-      dispatch({
-        type: ActionTypes.MOVIE_LOADED,
-        payload: result.data
-      });
-    });
+    .then(result => dispatch(movieLoaded(result.data)));
   }
 }
 
