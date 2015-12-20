@@ -196,6 +196,7 @@ func (s *Server) addMovie(w http.ResponseWriter, r *http.Request) {
 	}
 
 	movie, err := s.OMDB.Find(f.Title)
+
 	if err != nil {
 		s.Abort(w, r, err)
 		return
@@ -204,10 +205,18 @@ func (s *Server) addMovie(w http.ResponseWriter, r *http.Request) {
 	oldMovie, err := s.DB.Get(movie.ImdbID)
 
 	if err == errors.ErrMovieNotFound {
+
+		if err := s.DB.Save(movie); err != nil {
+			s.Abort(w, r, err)
+			return
+		}
+
 		s.Log.WithFields(logrus.Fields{
 			"movie": movie,
-		}).Info("Movie already in database")
-		s.Render.JSON(w, http.StatusOK, oldMovie)
+		}).Info("New movie added")
+
+		s.Render.JSON(w, http.StatusCreated, movie)
+		return
 	}
 
 	if err != nil {
@@ -215,13 +224,9 @@ func (s *Server) addMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.DB.Save(movie); err != nil {
-		s.Abort(w, r, err)
-		return
-	}
-
 	s.Log.WithFields(logrus.Fields{
-		"movie": movie,
-	}).Info("New movie added")
-	s.Render.JSON(w, http.StatusCreated, movie)
+		"movie": oldMovie,
+	}).Info("Movie already in database")
+	s.Render.JSON(w, http.StatusOK, oldMovie)
+
 }
