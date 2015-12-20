@@ -201,10 +201,25 @@ func (s *Server) addMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	oldMovie, err := s.DB.Get(movie.ImdbID)
+
+	if err == errors.ErrMovieNotFound {
+		s.Log.WithFields(logrus.Fields{
+			"movie": movie,
+		}).Info("Movie already in database")
+		s.Render.JSON(w, http.StatusOK, oldMovie)
+	}
+
+	if err != nil {
+		s.Abort(w, r, err)
+		return
+	}
+
 	if err := s.DB.Save(movie); err != nil {
 		s.Abort(w, r, err)
 		return
 	}
+
 	s.Log.WithFields(logrus.Fields{
 		"movie": movie,
 	}).Info("New movie added")
