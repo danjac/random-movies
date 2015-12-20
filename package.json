@@ -13,6 +13,7 @@
   "dependencies": {
     "axios": "^0.7.0",
     "bootstrap": "^3.3.5",
+    "bootswatch": "^3.3.6",
     "history": "^1.16.0",
     "jquery": "^2.1.4",
     "lodash": "^3.10.1",
@@ -47,7 +48,6 @@
     "mocha": "^2.3.3",
     "mocha-babel": "^3.0.0",
     "mocha-jsdom": "^1.0.0",
-    "react-hot-loader": "^1.3.0",
     "sinon": "^1.17.1",
     "sinon-chai": "^2.8.0",
     "style-loader": "^0.12.4",

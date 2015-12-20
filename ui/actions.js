@@ -6,6 +6,7 @@ import { Actions, Alert } from './constants';
 import * as WebAPI from './api';
 
 function movieLoaded(movie) {
+
   return {
       type: Actions.MOVIE_LOADED,
       payload: movie

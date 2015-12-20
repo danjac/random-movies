@@ -28,9 +28,6 @@ class Routes extends React.Component {
                  component={MovieList}
                  onEnter={this.actions.getMovies.bind(this)} />
 
-          <Route path="/random/"
-                 onEnter={this.actions.getRandomMovie.bind(this)} />
-
           <Route path="/movie/:id/"
                  component={Movie}
                  onEnter={this.getMovie.bind(this)}

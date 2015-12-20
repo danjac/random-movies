@@ -1,7 +1,8 @@
 import React, { PropTypes } from 'react';
 import { Link } from 'react-router';
 
-import 'bootstrap/dist/css/bootstrap.min.css';
+//import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootswatch/paper/bootstrap.min.css';
 
 import {
   Input,
