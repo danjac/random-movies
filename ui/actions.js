@@ -37,7 +37,7 @@ export function getMovie(id) {
     .then(result => dispatch(movieLoaded(result.data)))
     .catch(() => {
       dispatch(addMessage(Alert.DANGER, "Sorry, no movie found"));
-      dispatch(pushPath("/all/"));
+      dispatch(pushPath("/"));
     });
   }
 }
@@ -66,7 +66,7 @@ export function deleteMovie(movie) {
   return dispatch => {
     WebAPI.deleteMovie(movie.imdbID);
     dispatch(addMessage(Alert.INFO, `Movie "${movie.Title}" deleted`));
-    dispatch(pushPath("/all/"));
+    dispatch(pushPath("/"));
   }
 }
 
@@ -90,7 +90,7 @@ export function getRandomMovie() {
   return dispatch => {
     WebAPI
     .getRandomMovie()
-    .then(result => dispatch(movieLoaded(result.data)));
+    .then(result => dispatch(pushPath(`/movie/${result.data.imdbID}/`)));
   }
 }
 

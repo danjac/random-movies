@@ -23,14 +23,14 @@ class Routes extends React.Component {
     return (
       <Router history={this.props.history}>
         <Route component={App}>
+
           <Route path="/"
+                 component={MovieList}
+                 onEnter={this.actions.getMovies.bind(this)} />
+
+          <Route path="/random/"
                  component={Movie}
                  onEnter={this.actions.getRandomMovie.bind(this)} />
-
-          <Route path="/all/"
-                 component={MovieList}
-                 onEnter={this.actions.getMovies.bind(this)}
-                 onLeave={this.actions.clearMovie.bind(this)}/>
 
           <Route path="/movie/:id/"
                  component={Movie}

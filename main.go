@@ -54,6 +54,8 @@ func main() {
 		"port": *port,
 	}).Info("Server started")
 
-	http.ListenAndServe(":"+*port, chain)
+	if err := http.ListenAndServe(":"+*port, chain); err != nil {
+		panic(err)
+	}
 
 }
