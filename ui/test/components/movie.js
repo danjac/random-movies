@@ -5,7 +5,7 @@ import jsdom from 'mocha-jsdom';
 import { assert } from 'chai';
 
 
-import mockDom from '../mock-dom';
+//import mockDom from '../mock-dom';
 import { Movie } from '../../components/movie';
 
 describe('Movie components', () => {
