@@ -14,11 +14,12 @@ import {
 
 import * as actions from '../actions';
 
+function stripArticle(title) {
+  return title.match(/^the\s/i) ? title.substring(4) : title;
+}
 
 function getInitial(title) {
-  if (title.match(/^the\s/i)) {
-    title = title.substring(4);
-  }
+  title = stripArticle(title);
   var upCase = title.charAt(0).toUpperCase();
   if (upCase.toLowerCase() !== upCase) { // ASCII letter
     return upCase;
@@ -39,11 +40,12 @@ const ListItem = props => {
 
 const InitialGroup = props => {
   const { initial, group } = props;
+  const movies = _.sortBy(group, movie => stripArticle(movie.Title.toLowerCase()));
   return (
     <div>
       <h3>{initial}</h3>
       <ul className="list-unstyled">
-        {group.map(movie => {
+        {movies.map(movie => {
           return <ListItem key={movie.imdbID} movie={movie} />;
         })}
       </ul>
