@@ -47,9 +47,14 @@ export function addMovie(title) {
     WebAPI
     .addMovie(title)
     .then(result => {
-      dispatch(movieLoaded(result.data));
-      dispatch(addMessage(Alert.SUCCESS, "New movie added"));
-      dispatch(pushPath(`/movie/${result.data.imdbID}/`));
+      const movie = result.data;
+      if (result.status === 201) {
+        dispatch(addMessage(Alert.SUCCESS, `New movie "${movie.Title}" added to your collection`));
+        dispatch(pushPath(`/movie/${movie.imdbID}/`));
+        dispatch(movieLoaded(movie));
+      } else {
+        dispatch(addMessage(Alert.INFO, `"${movie.Title}" is already in your collection`));
+      }
     })
     .catch(() => {
       dispatch(addMessage(Alert.WARNING, `Sorry, couldn't find the movie "${title}"`));
@@ -60,7 +65,7 @@ export function addMovie(title) {
 export function deleteMovie(movie) {
   return dispatch => {
     WebAPI.deleteMovie(movie.imdbID);
-    dispatch(addMessage(Alert.INFO, "Movie deleted"));
+    dispatch(addMessage(Alert.INFO, `Movie "${movie.Title}" deleted`));
     dispatch(pushPath("/all/"));
   }
 }
