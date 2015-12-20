@@ -5,7 +5,7 @@ import { routeReducer } from 'redux-simple-router';
 
 import { Actions } from './constants';
 
-function messagesReducer(state=[], action) {
+export function messagesReducer(state=[], action) {
   switch(action.type) {
     case Actions.DISMISS_MESSAGE:
       return _.reject(state, msg => action.payload === msg.id);
@@ -15,7 +15,7 @@ function messagesReducer(state=[], action) {
   return state;
 }
 
-function movieReducer(state=null, action) {
+export function movieReducer(state=null, action) {
   switch(action.type) {
     case Actions.MOVIE_LOADED:
       return action.payload;
@@ -25,11 +25,11 @@ function movieReducer(state=null, action) {
   return state;
 }
 
-function moviesReducer(state=[], action) {
+export function moviesReducer(state=[], action) {
   return action.type === Actions.MOVIES_LOADED ? action.payload: state;
 }
 
-function suggestReducer(state=null, action) {
+export function suggestReducer(state=null, action) {
   return action.type === Actions.NEW_SUGGESTION ? action.payload: state;
 }
 
