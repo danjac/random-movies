@@ -6,7 +6,6 @@ import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
 import {
-  Glyphicon,
   Grid,
   Row,
   Col
@@ -29,9 +28,11 @@ function getInitial(title) {
 
 const ListItem = props => {
     const { movie } = props;
+    const link = <Link to={`/movie/${movie.imdbID}/`}>{movie.Title}</Link>;
+
     return (
       <li>
-        <Link to={`/movie/${movie.imdbID}/`}>{movie.Title}</Link> {movie.seen? <Glyphicon glyph="ok" /> : ''}
+        {movie.seen ? <s>{link}</s> : <span>{link}</span>}
       </li>
     );
 };
