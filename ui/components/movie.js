@@ -8,7 +8,10 @@ import {
   ButtonInput,
   ButtonGroup,
   Glyphicon,
-  Badge
+  Badge,
+  Grid,
+  Row,
+  Col
 } from 'react-bootstrap';
 
 import { bindActionCreators } from 'redux';
@@ -43,12 +46,22 @@ const Stars = props => {
 const Controls = props => {
   const { movie } = props;
   return (
-    <ButtonGroup>
-      {movie.seen ? '' : <Button bsStyle="primary" onClick={props.markSeen}><Glyphicon glyph="ok" /> Seen it!</Button>}
-      <Button bsStyle={movie.seen ? 'primary': 'default'} onClick={props.getRandomMovie}><Glyphicon glyph="random" /> Random</Button>
-      <Link className="btn btn-default" to="/all/"><Glyphicon glyph="list" /> See all</Link>
-      <Button bsStyle="danger" onClick={props.deleteMovie}><Glyphicon glyph="trash" /> Delete</Button>
-    </ButtonGroup>
+    <Grid>
+      <Row>
+        <Col md={6} xs={6}>
+          <ButtonGroup>
+            <Button bsStyle='primary' onClick={props.getRandomMovie}><Glyphicon glyph="random" /> Random</Button>
+            <Link className="btn btn-default" to="/all/"><Glyphicon glyph="list" /> See all</Link>
+            <Button bsStyle="danger" onClick={props.deleteMovie}><Glyphicon glyph="trash" /> Delete</Button>
+          </ButtonGroup>
+        </Col>
+        <Col md={3} xs={6}>
+          <ButtonGroup>
+            {movie.seen ? '' : <Button bsStyle="primary" onClick={props.markSeen}><Glyphicon glyph="ok" /> Seen it!</Button>}
+          </ButtonGroup>
+        </Col>
+        </Row>
+  </Grid>
   );
 
 };
@@ -85,28 +98,30 @@ class Movie extends React.Component {
     }
 
     return (
-      <div className="row">
-        <div className="col-md-3">
-          {movie.Poster === 'N/A'? 'No poster available' : <img className="img-responsive" src={movie.Poster} alt={movie.Title} />}
-        </div>
-        <div className="col-md-9">
-          <h2>{movie.Title} {movie.seen ? <Badge pullRight={true}><Glyphicon glyph="ok" /> Seen it!</Badge> : ''}</h2>
-          <Stars movie={movie} />
-          <dl className="dl-unstyled">
-            <dt>Year</dt>
-            <dd>{movie.Year}</dd>
-            <dt>Actors</dt>
-            <dd>{movie.Actors}</dd>
-            <dt>Director</dt>
-            <dd>{movie.Director}</dd>
-          </dl>
-          <p className="well">{movie.Plot}</p>
-          <Controls movie={movie}
-                    deleteMovie={this.deleteMovie.bind(this)}
-                    getRandomMovie={this.getRandomMovie.bind(this)}
-                    markSeen={this.markSeen.bind(this)} />
-        </div>
-      </div>
+      <Grid>
+        <Row>
+          <Col md={3}>
+            {movie.Poster === 'N/A'? 'No poster available' : <img className="img-responsive" src={movie.Poster} alt={movie.Title} />}
+          </Col>
+          <Col md={9}>
+            <h2>{movie.Title} {movie.seen ? <Badge pullRight={true}><Glyphicon glyph="ok" /> Seen it!</Badge> : ''}</h2>
+            <Stars movie={movie} />
+            <dl className="dl-unstyled">
+              <dt>Year</dt>
+              <dd>{movie.Year}</dd>
+              <dt>Actors</dt>
+              <dd>{movie.Actors}</dd>
+              <dt>Director</dt>
+              <dd>{movie.Director}</dd>
+            </dl>
+            <p className="well">{movie.Plot}</p>
+            <Controls movie={movie}
+                      deleteMovie={this.deleteMovie.bind(this)}
+                      getRandomMovie={this.getRandomMovie.bind(this)}
+                      markSeen={this.markSeen.bind(this)} />
+          </Col>
+        </Row>
+      </Grid>
     );
   }
 
