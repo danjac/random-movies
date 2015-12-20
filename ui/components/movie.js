@@ -14,7 +14,6 @@ import {
 import { bindActionCreators } from 'redux';
 
 import { connect } from 'react-redux';
-import { pushPath } from 'redux-simple-router'
 
 import * as actions from '../actions';
 
@@ -58,13 +57,12 @@ class Movie extends React.Component {
 
   constructor(props) {
     super(props);
-    this.actions = bindActionCreators({ pushPath, ...actions}, this.props.dispatch);
+    this.actions = bindActionCreators(actions, this.props.dispatch);
   }
 
   deleteMovie(event) {
     event.preventDefault();
     this.actions.deleteMovie(this.props.movie);
-    this.actions.pushPath("/all/");
   }
 
   getRandomMovie(event) {
@@ -93,7 +91,7 @@ class Movie extends React.Component {
         </div>
         <div className="col-md-9">
           <h2>{movie.Title} {movie.seen ? <Badge pullRight={true}><Glyphicon glyph="ok" /> Seen it!</Badge> : ''}</h2>
-          <Stars movie={this.props.movie} />
+          <Stars movie={movie} />
           <dl className="dl-unstyled">
             <dt>Year</dt>
             <dd>{movie.Year}</dd>
@@ -103,7 +101,7 @@ class Movie extends React.Component {
             <dd>{movie.Director}</dd>
           </dl>
           <p className="well">{movie.Plot}</p>
-          <Controls movie={this.props.movie}
+          <Controls movie={movie}
                     deleteMovie={this.deleteMovie.bind(this)}
                     getRandomMovie={this.getRandomMovie.bind(this)}
                     markSeen={this.markSeen.bind(this)} />

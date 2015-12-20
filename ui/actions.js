@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 import { pushPath } from 'redux-simple-router';
 
-import { Actions } from './constants';
+import { Actions, Alert } from './constants';
 import * as WebAPI from './api';
 
 function movieLoaded(movie) {
@@ -36,7 +36,7 @@ export function getMovie(id) {
     .getMovie(id)
     .then(result => dispatch(movieLoaded(result.data)))
     .catch(() => {
-      dispatch(addMessage("danger", "Sorry, no movie found"));
+      dispatch(addMessage(Alert.DANGER, "Sorry, no movie found"));
       dispatch(pushPath("/all/"));
     });
   }
@@ -48,19 +48,20 @@ export function addMovie(title) {
     .addMovie(title)
     .then(result => {
       dispatch(movieLoaded(result.data));
-      dispatch(addMessage("success", "New movie added"));
+      dispatch(addMessage(Alert.SUCCESS, "New movie added"));
       dispatch(pushPath(`/movie/${result.data.imdbID}/`));
     })
     .catch(() => {
-      dispatch(addMessage("danger", `Sorry, couldn't find the movie "${title}"`));
+      dispatch(addMessage(Alert.WARNING, `Sorry, couldn't find the movie "${title}"`));
     });
   }
 }
 
 export function deleteMovie(movie) {
   return (dispatch) => {
-    dispatch(addMessage("info", "Movie deleted"));
-    WebAPI.deleteMovie(movie.imdbID)
+    WebAPI.deleteMovie(movie.imdbID);
+    dispatch(addMessage(Alert.INFO, "Movie deleted"));
+    dispatch(pushPath("/all/"));
   }
 }
 
