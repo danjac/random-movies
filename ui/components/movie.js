@@ -18,7 +18,43 @@ import { pushPath } from 'redux-simple-router'
 
 import * as actions from '../actions';
 
-export class Movie extends React.Component {
+
+const Stars = props => {
+
+  const { movie } = props;
+  const isRated = !(isNaN(movie.imdbRating));
+
+  if (!isRated) {
+    return <h3><em>This movie has not been rated yet.</em></h3>;
+  }
+
+  const rating = parseFloat(movie.imdbRating);
+  const stars = Math.round(rating);
+
+  return (
+      <h3>
+        {_.range(stars).map(index => <Glyphicon key={index} glyph="star" />)}
+        {_.range(10 - stars).map(index => <Glyphicon key={index} glyph="star-empty" />)}
+        &nbsp; {rating} <a target="_blank" href={`http://www.imdb.com/title/${movie.imdbID}/`}><small>IMDB</small></a>
+      </h3>
+  );
+
+};
+
+const Controls = props => {
+  const { movie } = props;
+  return (
+    <ButtonGroup>
+      {movie.seen ? '' : <Button bsStyle="primary" onClick={props.markSeen}><Glyphicon glyph="ok" /> Seen it!</Button>}
+      <Button bsStyle={movie.seen ? 'primary': 'default'} onClick={props.getRandomMovie}><Glyphicon glyph="random" /> Random</Button>
+      <Link className="btn btn-default" to="/all/"><Glyphicon glyph="list" /> See all</Link>
+      <Button bsStyle="danger" onClick={props.deleteMovie}><Glyphicon glyph="trash" /> Delete</Button>
+    </ButtonGroup>
+  );
+
+};
+
+class Movie extends React.Component {
 
   constructor(props) {
     super(props);
@@ -41,39 +77,8 @@ export class Movie extends React.Component {
     this.actions.markSeen(this.props.movie);
   }
 
-  renderStars() {
-
-    const movie = this.props.movie;
-    const isRated = !(isNaN(movie.imdbRating));
-
-    if (!isRated) {
-      return <h3><em>This movie has not been rated yet.</em></h3>;
-    }
-
-    const rating = parseFloat(movie.imdbRating);
-    const stars = Math.round(rating);
-
-    return (
-        <h3>
-          {_.range(stars).map(index => <Glyphicon key={index} glyph="star" />)}
-          {_.range(10 - stars).map(index => <Glyphicon key={index} glyph="star-empty" />)}
-          &nbsp; {rating} <a target="_blank" href={`http://www.imdb.com/title/${movie.imdbID}/`}><small>IMDB</small></a>
-        </h3>
-    );
-
-  }
-
   renderButtons() {
-    const movie = this.props.movie;
-    return (
-      <ButtonGroup>
-        {movie.seen ? '' : <Button bsStyle="primary" onClick={this.markSeen.bind(this)}><Glyphicon glyph="ok" /> Seen it!</Button>}
-        <Button bsStyle={movie.seen ? 'primary': 'default'} onClick={this.getRandomMovie.bind(this)}><Glyphicon glyph="random" /> Random</Button>
-        <Link className="btn btn-default" to="/all/"><Glyphicon glyph="list" /> See all</Link>
-        <Button bsStyle="danger" onClick={this.deleteMovie.bind(this)}><Glyphicon glyph="trash" /> Delete</Button>
-      </ButtonGroup>
-    );
-  }
+   }
 
   render() {
     const movie = this.props.movie;
@@ -88,7 +93,7 @@ export class Movie extends React.Component {
         </div>
         <div className="col-md-9">
           <h2>{movie.Title} {movie.seen ? <Badge pullRight={true}><Glyphicon glyph="ok" /> Seen it!</Badge> : ''}</h2>
-          {this.renderStars()}
+          <Stars movie={this.props.movie} />
           <dl className="dl-unstyled">
             <dt>Year</dt>
             <dd>{movie.Year}</dd>
@@ -98,7 +103,10 @@ export class Movie extends React.Component {
             <dd>{movie.Director}</dd>
           </dl>
           <p className="well">{movie.Plot}</p>
-          {this.renderButtons()}
+          <Controls movie={this.props.movie}
+                    deleteMovie={this.deleteMovie.bind(this)}
+                    getRandomMovie={this.getRandomMovie.bind(this)}
+                    markSeen={this.markSeen.bind(this)} />
         </div>
       </div>
     );

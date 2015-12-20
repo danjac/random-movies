@@ -19,13 +19,53 @@ import { connect } from 'react-redux';
 
 import * as actions from '../actions';
 
-class App extends React.Component {
+const Suggestion = props => {
+    const { movie } = props;
+    if (!movie) return <span></span>;
+    return (
+      <small>
+        <b><em>Have you seen?</em></b> <Link to={`/movie/${movie.imdbID}/`}>{movie.Title} ({movie.Year}) </Link>
+      </small>
+    );
 
-  constructor(props, context) {
-    super(props, context);
-    const { dispatch } = this.props;
-    this.actions = bindActionCreators(actions, dispatch);
-  }
+};
+
+const Header = props => {
+    return (
+        <div className="page-header">
+          <Grid>
+            <Row>
+              <Col xs={6} md={6}>
+                <h1><Glyphicon glyph="film" /> Movie Wishlist</h1>
+              </Col>
+              <Col xs={6} md={6} className="text-right">
+                <Suggestion movie={props.suggestion} />
+              </Col>
+            </Row>
+        </Grid>
+        </div>
+    );
+};
+
+const Alerts = props => {
+  return (
+    <div className="container">
+      {props.messages.map(msg => {
+        const dismissAlert = () => { props.dismissMessage(msg.id); };
+        return (
+          <Alert key={msg.id}
+                 bsStyle={msg.status}
+                 onDismiss={dismissAlert}
+                 dismissAfter={3000}>
+            <p>{msg.message}</p>
+          </Alert>
+        );
+      })}
+    </div>
+  );
+};
+
+class AddMovieForm extends React.Component {
 
   addMovie(event) {
     event.preventDefault();
@@ -34,11 +74,11 @@ class App extends React.Component {
 
     if (title) {
       node.value = "";
-      this.actions.addMovie(title);
+      this.props.addMovie(title);
     }
   }
 
-  renderForm() {
+  render() {
     return (
       <div className="container">
         <form className="form form-horizontal" onSubmit={this.addMovie.bind(this)}>
@@ -55,57 +95,23 @@ class App extends React.Component {
     );
   }
 
-  renderHeader() {
-    return (
-        <div className="page-header">
-          <Grid>
-            <Row>
-              <Col xs={6} md={6}>
-                <h1><Glyphicon glyph="film" /> Movie Wishlist</h1>
-              </Col>
-              <Col xs={6} md={6} className="text-right">
-              {this.renderSuggestion()}
-              </Col>
-            </Row>
-        </Grid>
-        </div>
-    );
-  }
+};
 
-  renderSuggestion() {
-    const movie = this.props.suggestion;
-    if (!movie) return '';
-    return (
-      <small>
-        <b><em>Have you seen?</em></b> <Link to={`/movie/${movie.imdbID}/`}>{movie.Title} ({movie.Year}) </Link>
-      </small>
-    );
-  }
+class App extends React.Component {
 
-  renderAlerts() {
-    return (
-      <div className="container">
-        {this.props.messages.map(msg => {
-          const dismissAlert = () => { this.actions.dismissMessage(msg.id); };
-          return (
-            <Alert key={msg.id}
-                   bsStyle={msg.status}
-                   onDismiss={dismissAlert}
-                   dismissAfter={3000}>
-              <p>{msg.message}</p>
-            </Alert>
-          );
-        })}
-      </div>
-    );
+  constructor(props, context) {
+    super(props, context);
+    const { dispatch } = this.props;
+    this.actions = bindActionCreators(actions, dispatch);
   }
 
   render() {
     return (
       <div className="container">
-        {this.renderHeader()}
-        {this.renderAlerts()}
-        {this.renderForm()}
+        <Header suggestion={this.props.suggestion} />
+        <Alerts dismissMessage={this.actions.dismissMessage}
+                messages={this.props.messages} />
+        <AddMovieForm addMovie={this.actions.addMovie}  />
         {this.props.children}
       </div>
     );
