@@ -31,7 +31,7 @@ export function dismissMessage(id) {
 }
 
 export function getMovie(id) {
-  return (dispatch) => {
+  return dispatch => {
     WebAPI
     .getMovie(id)
     .then(result => dispatch(movieLoaded(result.data)))
@@ -43,7 +43,7 @@ export function getMovie(id) {
 }
 
 export function addMovie(title) {
-  return (dispatch) => {
+  return dispatch => {
     WebAPI
     .addMovie(title)
     .then(result => {
@@ -58,7 +58,7 @@ export function addMovie(title) {
 }
 
 export function deleteMovie(movie) {
-  return (dispatch) => {
+  return dispatch => {
     WebAPI.deleteMovie(movie.imdbID);
     dispatch(addMessage(Alert.INFO, "Movie deleted"));
     dispatch(pushPath("/all/"));
@@ -66,7 +66,7 @@ export function deleteMovie(movie) {
 }
 
 export function getMovies() {
-  return (dispatch) => {
+  return dispatch => {
     WebAPI.getMovies()
     .then(result => {
       dispatch({
@@ -82,7 +82,7 @@ export function clearMovie() {
 }
 
 export function getRandomMovie() {
-  return (dispatch) => {
+  return dispatch => {
     WebAPI
     .getRandomMovie()
     .then(result => dispatch(movieLoaded(result.data)));
