@@ -88,9 +88,6 @@ class Movie extends React.Component {
     this.actions.markSeen(this.props.movie);
   }
 
-  renderButtons() {
-   }
-
   render() {
     const movie = this.props.movie;
     if (!movie || !movie.imdbID) {
