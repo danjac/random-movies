@@ -126,8 +126,7 @@ App.propTypes = {
 export default connect(state => {
   return {
       suggestion: state.suggestion,
-      messages: state.messages,
-      router: state.router
+      messages: state.messages
   };
 })(App);
 
