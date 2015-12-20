@@ -50,7 +50,7 @@ const Controls = props => {
       <Row>
         <Col md={6} xs={6}>
           <ButtonGroup>
-            <Link className='btn btn-primary' to="/random/"><Glyphicon glyph="random" /> Random</Link>
+            <Button bsStyle="primary" onClick={props.getRandomMovie}><Glyphicon glyph="random" /> Random</Button>
             <Link className="btn btn-default" to="/"><Glyphicon glyph="list" /> See all</Link>
             <Button bsStyle="danger" onClick={props.deleteMovie}><Glyphicon glyph="trash" /> Delete</Button>
           </ButtonGroup>

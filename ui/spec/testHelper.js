@@ -1,10 +1,10 @@
-import React from 'react/addons';
+import React from 'react';
+import TestUtils from 'react-addons-test-utils';
 import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-let { assert, expect } = chai,
-    { TestUtils } = React.addons;
+let { assert, expect } = chai;
 
 chai.should();
 chai.use(sinonChai);

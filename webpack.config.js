@@ -58,6 +58,7 @@ module.exports = {
     ]
   },
   resolve: {
+    root: path.join(__dirname),
     extensions: ['', '.js'],
     modulesDirectories: ['./ui', './node_modules']
   }
