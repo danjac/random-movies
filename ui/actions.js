@@ -2,19 +2,19 @@ import _ from 'lodash';
 
 import { pushPath } from 'redux-simple-router';
 
-import ActionTypes from './actionTypes';
+import { Actions } from './constants';
 import * as WebAPI from './api';
 
 function movieLoaded(movie) {
   return {
-      type: ActionTypes.MOVIE_LOADED,
+      type: Actions.MOVIE_LOADED,
       payload: movie
   };
 }
 
 export function addMessage(status, message) {
   return {
-    type: ActionTypes.ADD_MESSAGE,
+    type: Actions.ADD_MESSAGE,
     payload: {
       status,
       message,
@@ -25,7 +25,7 @@ export function addMessage(status, message) {
 
 export function dismissMessage(id) {
   return {
-    type: ActionTypes.DISMISS_MESSAGE,
+    type: Actions.DISMISS_MESSAGE,
     payload: id
   };
 }
@@ -69,7 +69,7 @@ export function getMovies() {
     WebAPI.getMovies()
     .then(result => {
       dispatch({
-        type: ActionTypes.MOVIES_LOADED,
+        type: Actions.MOVIES_LOADED,
         payload: result.data
       });
     });
@@ -91,13 +91,13 @@ export function getRandomMovie() {
 export function markSeen(movie) {
   WebAPI.markSeen(movie.imdbID);
   return {
-    type: ActionTypes.MARK_SEEN
+    type: Actions.MARK_SEEN
   };
 }
 
 export function suggest(movie) {
   return {
-    type: ActionTypes.NEW_SUGGESTION,
+    type: Actions.NEW_SUGGESTION,
     payload: movie
   }
 }

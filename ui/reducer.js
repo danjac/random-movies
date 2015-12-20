@@ -3,13 +3,13 @@ import _ from 'lodash';
 import { combineReducers } from 'redux';
 import { routeReducer } from 'redux-simple-router';
 
-import ActionTypes from './actionTypes';
+import { Actions } from './constants';
 
 function messagesReducer(state=[], action) {
   switch(action.type) {
-    case ActionTypes.DISMISS_MESSAGE:
+    case Actions.DISMISS_MESSAGE:
       return _.reject(state, msg => action.payload === msg.id);
-    case ActionTypes.ADD_MESSAGE:
+    case Actions.ADD_MESSAGE:
       return state.concat(action.payload);
   }
   return state;
@@ -17,20 +17,20 @@ function messagesReducer(state=[], action) {
 
 function movieReducer(state=null, action) {
   switch(action.type) {
-    case ActionTypes.MOVIE_LOADED:
+    case Actions.MOVIE_LOADED:
       return action.payload;
-    case ActionTypes.MARK_SEEN:
+    case Actions.MARK_SEEN:
       return state ? Object.assign({}, state, { seen: true }) : state;
   }
   return state;
 }
 
 function moviesReducer(state=[], action) {
-  return action.type === ActionTypes.MOVIES_LOADED ? action.payload: state;
+  return action.type === Actions.MOVIES_LOADED ? action.payload: state;
 }
 
 function suggestReducer(state=null, action) {
-  return action.type === ActionTypes.NEW_SUGGESTION ? action.payload: state;
+  return action.type === Actions.NEW_SUGGESTION ? action.payload: state;
 }
 
 export default combineReducers({
