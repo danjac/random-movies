@@ -120,6 +120,8 @@ class App extends React.Component {
 
 App.propTypes = {
   dispatch: PropTypes.func.isRequired,
+  messages: PropTypes.array,
+  suggestion: PropTypes.object,
   children: PropTypes.node
 }
 
