@@ -20,10 +20,12 @@ describe('Movie components', () => {
     Plot: "..."
   };
 
-  beforeEach(() => {
-  });
-
-  afterEach(() => {
+  it('should show a badge if seen', () => {
+    const seenMovie = Object.assign({}, movie, { seen: true });
+    const component = <Movie movie={seenMovie} dispatch={_.noop} />;
+    const rendered = TestUtils.renderIntoDocument(component, 'div');
+    const header = TestUtils.findRenderedDOMComponentWithTag(rendered, "h2");
+    assert.include(header.textContent, "Seen it");
   });
 
   it('should show a movie title', () => {
