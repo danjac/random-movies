@@ -1,12 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Router, Route } from 'react-router';
+import { Router, Route, IndexRoute } from 'react-router';
 
 import { bindActionCreators } from 'redux';
 
 import * as actions from './actions';
 
-import { App, Movie, MovieList } from './components';
+import { App, Movie, MovieList, NotFound } from './components';
 
 class Routes extends React.Component {
 
@@ -22,16 +22,17 @@ class Routes extends React.Component {
   render() {
     return (
       <Router history={this.props.history}>
-        <Route component={App}>
+        <Route path="/" component={App}>
 
-          <Route path="/"
-                 component={MovieList}
-                 onEnter={this.actions.getMovies.bind(this)} />
+          <IndexRoute component={MovieList}
+                      onEnter={this.actions.getMovies.bind(this)} />
 
           <Route path="/movie/:id/"
                  component={Movie}
                  onEnter={this.getMovie.bind(this)}
                  onLeave={this.actions.clearMovie.bind(this)} />
+
+          <Route path="*" component={NotFound} />
         </Route>
       </Router>
 
@@ -39,5 +40,4 @@ class Routes extends React.Component {
 
   };
 }
-
 export default connect()(Routes);
