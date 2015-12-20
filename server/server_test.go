@@ -70,7 +70,7 @@ func TestAddMovie(t *testing.T) {
 	w := httptest.NewRecorder()
 	s := newTestServer()
 	s.addMovie(w, req)
-	if w.Code != http.StatusCreated {
+	if w.Code != http.StatusOK {
 		t.Errorf("Add movie did not return %v", http.StatusCreated)
 	}
 }
