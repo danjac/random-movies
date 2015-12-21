@@ -6,9 +6,7 @@ import { Actions, Alert } from './constants';
 import * as WebAPI from './api';
 
 // creates a standard FSA payload object
-function createAction(type, payload) {
-  return _.merge({ type }, { payload });
-}
+const createAction = (type, payload) => _.merge({ type }, { payload });
 
 export const movieLoaded = movie => createAction(Actions.MOVIE_LOADED, movie);
 
@@ -17,7 +15,6 @@ export const addMessage = (status, message) => createAction(Actions.ADD_MESSAGE,
 export const dismissMessage = id => createAction(Actions.DISMISS_MESSAGE, id);
 
 export const suggest = movie => createAction(Actions.NEW_SUGGESTION, movie);
-
 
 export function getMovie(id) {
   return dispatch => {
