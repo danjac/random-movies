@@ -7,10 +7,7 @@ import * as WebAPI from './api';
 
 // creates a standard FSA payload object
 function createAction(type, payload) {
-  return {
-    type,
-    payload
-  };
+  return _.merge({ type }, { payload });
 }
 
 export const movieLoaded = movie => createAction(Actions.MOVIE_LOADED, movie);

@@ -20,7 +20,7 @@ export function movieReducer(state=null, action) {
     case Actions.MOVIE_LOADED:
       return action.payload;
     case Actions.MARK_SEEN:
-      return state ? Object.assign({}, state, { seen: true }) : state;
+      return _.isNull(state) ? state : Object.assign({}, state, { seen: true });
   }
   return state;
 }
