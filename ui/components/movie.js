@@ -106,6 +106,10 @@ export class Movie extends React.Component {
             <dl className="dl-unstyled">
               <dt>Year</dt>
               <dd>{movie.Year}</dd>
+              <dt>Genre</dt>
+              <dd>{movie.Genre}</dd>
+              <dt>Rated</dt>
+              <dd>{movie.Rated}</dd>
               <dt>Actors</dt>
               <dd>{movie.Actors}</dd>
               <dt>Director</dt>

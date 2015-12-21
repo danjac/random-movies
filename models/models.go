@@ -11,6 +11,9 @@ type Movie struct {
 	Year     string
 	Plot     string
 	Director string
+	Rated    string
+	Runtime  string
+	Genre    string
 	Rating   string `json:"imdbRating"`
 	ImdbID   string `json:"imdbID"`
 	Seen     bool   `json:"seen"`

@@ -5,31 +5,22 @@ import { pushPath } from 'redux-simple-router';
 import { Actions, Alert } from './constants';
 import * as WebAPI from './api';
 
-function movieLoaded(movie) {
-
+// creates a standard FSA payload object
+function createAction(type, payload) {
   return {
-      type: Actions.MOVIE_LOADED,
-      payload: movie
+    type,
+    payload
   };
 }
 
-export function addMessage(status, message) {
-  return {
-    type: Actions.ADD_MESSAGE,
-    payload: {
-      status,
-      message,
-      id: _.uniqueId()
-    }
-  };
-}
+export const movieLoaded = movie => createAction(Actions.MOVIE_LOADED, movie);
 
-export function dismissMessage(id) {
-  return {
-    type: Actions.DISMISS_MESSAGE,
-    payload: id
-  };
-}
+export const addMessage = (status, message) => createAction(Actions.ADD_MESSAGE, { status, message });
+
+export const dismissMessage = id => createAction(Actions.DISMISS_MESSAGE, id);
+
+export const suggest = movie => createAction(Actions.NEW_SUGGESTION, movie);
+
 
 export function getMovie(id) {
   return dispatch => {
@@ -75,10 +66,7 @@ export function getMovies() {
   return dispatch => {
     WebAPI.getMovies()
     .then(result => {
-      dispatch({
-        type: Actions.MOVIES_LOADED,
-        payload: result.data
-      });
+      dispatch(createAction(Actions.MOVIES_LOADED, result.data));
     });
   }
 }
@@ -97,14 +85,7 @@ export function getRandomMovie() {
 
 export function markSeen(movie) {
   WebAPI.markSeen(movie.imdbID);
-  return {
-    type: Actions.MARK_SEEN
-  };
+  return createAction(Actions.MARK_SEEN);
 }
 
-export function suggest(movie) {
-  return {
-    type: Actions.NEW_SUGGESTION,
-    payload: movie
-  }
-}
+
