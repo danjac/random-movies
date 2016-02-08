@@ -1,7 +1,6 @@
 import React, { PropTypes } from 'react';
 import { Link } from 'react-router';
 import { List } from 'immutable';
-import { Movie } from '../records';
 
 //import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootswatch/superhero/bootstrap.min.css';
@@ -33,11 +32,6 @@ const Suggestion = props => {
 
 };
 
-Suggestion.propTypes = {
-  movie: PropTypes.instanceOf(Movie).isRequired,
-};
-
-
 const Header = props => {
     return (
         <div className="page-header">
@@ -55,11 +49,6 @@ const Header = props => {
     );
 };
 
-Header.propTypes = {
-  suggestion: PropTypes.instanceOf(Movie).isRequired,
-};
-
-
 const Alerts = props => {
   return (
     <div className="container">
@@ -76,10 +65,6 @@ const Alerts = props => {
       })}
     </div>
   );
-};
-
-Alerts.propTypes = {
-  messages: PropTypes.instanceOf(List).isRequired,
 };
 
 class AddMovieForm extends React.Component {
@@ -114,10 +99,6 @@ class AddMovieForm extends React.Component {
 
 };
 
-AddMovieForm.propTypes = {
-  addMovie: PropTypes.func.isRequired,
-};
-
 class App extends React.Component {
 
   constructor(props) {
@@ -141,9 +122,9 @@ class App extends React.Component {
 
 App.propTypes = {
   dispatch: PropTypes.func.isRequired,
-  messages: PropTypes.instanceOf(List).isRequired,
-  suggestion: PropTypes.instanceOf(Movie).isRequired,
-  children: PropTypes.node.isRequired,
+  messages: PropTypes.instanceOf(List),
+  suggestion: PropTypes.object,
+  children: PropTypes.node
 }
 
 export default connect(state => {

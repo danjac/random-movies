@@ -18,6 +18,7 @@ import { bindActionCreators } from 'redux';
 
 import { connect } from 'react-redux';
 
+import { Movie } from '../records';
 import * as actions from '../actions';
 
 
@@ -43,6 +44,10 @@ const Stars = props => {
 
 };
 
+Stars.propTypes = {
+  movie: PropTypes.instanceOf(Movie).isRequired,
+};
+
 const Controls = props => {
   const { movie } = props;
   return (
@@ -66,7 +71,14 @@ const Controls = props => {
 
 };
 
-export class Movie extends React.Component {
+Controls.propTypes = {
+  getRandomMovie: PropTypes.func.isRequired,
+  deleteMovie: PropTypes.func.isRequired,
+  markSeeen: PropTypes.func.isRequired,
+  movie: PropTypes.instanceOf(Movie).isRequired,
+};
+
+export class MovieDetail extends React.Component {
 
   constructor(props) {
     super(props);
@@ -128,13 +140,13 @@ export class Movie extends React.Component {
 
 }
 
-Movie.propTypes = {
+MovieDetail.propTypes = {
   dispatch: PropTypes.func.isRequired,
-  movie: PropTypes.object
+  movie: PropTypes.instanceOf(Movie).isRequired,
 }
 
 export default connect(state => {
   return {
     movie: state.movie,
   };
-})(Movie);
+})(MovieDetail);

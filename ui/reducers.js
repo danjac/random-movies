@@ -1,30 +1,12 @@
 import _ from 'lodash';
 
-import { List, Record, fromJS } from 'immutable';
+import { List, fromJS } from 'immutable';
 
 import { combineReducers } from 'redux';
 import { routeReducer } from 'redux-simple-router';
 
 import { Actions } from './constants';
-
-const Message = Record({
-  status: '',
-  message: '',
-  id: 0,
-});
-
-const Movie = Record({
-  Title: '',
-  Actors: '',
-  Poster: '',
-  Year: '',
-  Plot: '',
-  Director: '',
-  imdbID: '',
-  imdbRating: '',
-  seen: false,
-});
-
+import { Movie, Message } from './records';
 
 export function messagesReducer(state=List(), action) {
   switch(action.type) {
