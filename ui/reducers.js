@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { List, fromJS } from 'immutable';
 
 import { combineReducers } from 'redux';
-import { routeReducer } from 'redux-simple-router';
+import { routeReducer } from 'react-router-redux';
 
 import { Actions } from './constants';
 import { Movie, Message } from './records';

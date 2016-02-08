@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import { pushPath } from 'redux-simple-router';
+import { routeActions } from 'react-router-redux';
 
 import { Actions, Alert } from './constants';
 import * as WebAPI from './api';
@@ -23,7 +23,7 @@ export function getMovie(id) {
     .then(result => dispatch(movieLoaded(result.data)))
     .catch(() => {
       dispatch(addMessage(Alert.DANGER, "Sorry, no movie found"));
-      dispatch(pushPath("/"));
+      dispatch(routeActions.push("/"));
     });
   }
 }
@@ -36,7 +36,7 @@ export function addMovie(title) {
       const movie = result.data;
       if (result.status === 201) {
         dispatch(addMessage(Alert.SUCCESS, `New movie "${movie.Title}" added to your collection`));
-        dispatch(pushPath(`/movie/${movie.imdbID}/`));
+        dispatch(routeActions.push(`/movie/${movie.imdbID}/`));
         dispatch(movieLoaded(movie));
       } else {
         dispatch(addMessage(Alert.INFO, `"${movie.Title}" is already in your collection`));
@@ -52,7 +52,7 @@ export function deleteMovie(movie) {
   return dispatch => {
     WebAPI.deleteMovie(movie.imdbID);
     dispatch(addMessage(Alert.INFO, `Movie "${movie.Title}" deleted`));
-    dispatch(pushPath("/"));
+    dispatch(routeActions.push("/"));
   }
 }
 
@@ -73,7 +73,7 @@ export function getRandomMovie() {
   return dispatch => {
     WebAPI
     .getRandomMovie()
-    .then(result => dispatch(pushPath(`/movie/${result.data.imdbID}/`)));
+    .then(result => dispatch(routeActions.push(`/movie/${result.data.imdbID}/`)));
   }
 }
 

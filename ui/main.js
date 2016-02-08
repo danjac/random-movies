@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import createHashHistory from 'history/lib/createHashHistory';
-import { syncReduxAndRouter } from 'redux-simple-router';
+import { hashHistory } from 'react-router';
 import { Provider } from 'react-redux';
 import { DevTools, DebugPanel, LogMonitor } from 'redux-devtools/lib/react';
 
@@ -9,10 +8,7 @@ import Routes from './routes';
 import configureStore from './store';
 import { suggest } from './actions';
 
-const history = createHashHistory();
-const store = configureStore();
-
-syncReduxAndRouter(history, store);
+const store = configureStore(hashHistory);
 
 const debugPanel = window.__ENV__ === "dev!!!" && (
   <DebugPanel top right bottom>
@@ -27,7 +23,7 @@ new WebSocket(`ws://${window.location.host}/api/suggest`).onmessage = event => {
 const Container = props => {
   return (
     <Provider store={store}>
-      <Routes history={history} />
+      <Routes history={hashHistory} />
     </Provider>
   );
 }
