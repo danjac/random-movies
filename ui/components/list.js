@@ -2,8 +2,8 @@ import React, { PropTypes } from 'react';
 import _ from 'lodash';
 import { Link } from 'react-router';
 import { bindActionCreators } from 'redux';
-
 import { connect } from 'react-redux';
+import { List } from 'immutable';
 
 import {
   Grid,
@@ -110,7 +110,7 @@ class MovieList extends React.Component {
 
 MovieList.propTypes = {
   dispatch: PropTypes.func.isRequired,
-  movies: PropTypes.object,
+  movies: PropTypes.instanceOf(List),
 };
 
 export default connect(state => {
