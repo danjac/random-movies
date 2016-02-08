@@ -8,11 +8,12 @@ import { connect } from 'react-redux';
 import {
   Grid,
   Row,
-  Col
+  Col,
 } from 'react-bootstrap';
 
 
 import * as actions from '../actions';
+import { Movie } from '../records';
 
 function stripArticle(title) {
   return title.match(/^the\s/i) ? title.substring(4) : title;
@@ -27,15 +28,20 @@ function getInitial(title) {
 }
 
 const ListItem = props => {
-    const { movie } = props;
-    const link = <Link to={`/movie/${movie.imdbID}/`}>{movie.Title}</Link>;
+  const { movie } = props;
+  const link = <Link to={`/movie/${movie.imdbID}/`}>{movie.Title}</Link>;
 
-    return (
-      <li>
-        {movie.seen ? <s>{link}</s> : <span>{link}</span>}
-      </li>
-    );
+  return (
+    <li>
+      {movie.seen ? <s>{link}</s> : <span>{link}</span>}
+    </li>
+  );
 };
+
+ListItem.propTypes = {
+  movie: PropTypes.instanceOf(Movie).isRequired,
+};
+
 
 const InitialGroup = props => {
   const { initial, group } = props;
@@ -52,6 +58,11 @@ const InitialGroup = props => {
   );
 };
 
+InitialGroup.propTypes = {
+  initial: PropTypes.string.isRequired,
+  group: PropTypes.array.isRequired,
+};
+
 class MovieList extends React.Component {
 
   constructor(props) {
@@ -61,7 +72,6 @@ class MovieList extends React.Component {
   }
 
   render() {
-
     const { movies } = this.props;
     const groups = movies.groupBy(movie => getInitial(movie.Title)).toJS();
     const cols = _.chunk(_.sortBy(Object.keys(groups)), 4);
@@ -71,13 +81,20 @@ class MovieList extends React.Component {
       <div>
         {movies.size ? <h3>Total {movies.size} movies</h3> : ''}
         <Grid>
-        {rows.map((row, index) => {
+        {rows.map((row, rowIndex) => {
           return (
-            <Row key={index}>
-              {row.map((col, index) => {
+            <Row key={rowIndex}>
+              {row.map((col, colIndex) => {
                 return (
-                  <Col key={index} md={3}>
-                    {col.map(initial => <InitialGroup key={initial} group={groups[initial]} initial={initial} />)}
+                  <Col key={colIndex} md={3}>
+                    {col.map(initial => {
+                      return (
+                        <InitialGroup
+                          key={initial}
+                          group={groups[initial]}
+                          initial={initial}
+                        />);
+                    })}
                   </Col>
                 );
               })}
@@ -98,7 +115,6 @@ MovieList.propTypes = {
 
 export default connect(state => {
   return {
-      movies: state.movies,
+    movies: state.movies,
   };
 })(MovieList);
-

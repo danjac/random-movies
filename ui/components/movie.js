@@ -3,15 +3,13 @@ import { Link } from 'react-router';
 import _ from 'lodash';
 
 import {
-  Input,
   Button,
-  ButtonInput,
   ButtonGroup,
   Glyphicon,
   Badge,
   Grid,
   Row,
-  Col
+  Col,
 } from 'react-bootstrap';
 
 import { bindActionCreators } from 'redux';
@@ -23,7 +21,6 @@ import * as actions from '../actions';
 
 
 const Stars = props => {
-
   const { movie } = props;
   const isRated = !(isNaN(movie.imdbRating));
 
@@ -41,7 +38,6 @@ const Stars = props => {
         &nbsp; {rating} <a target="_blank" href={`http://www.imdb.com/title/${movie.imdbID}/`}><small>IMDB</small></a>
       </h3>
   );
-
 };
 
 Stars.propTypes = {
@@ -51,30 +47,28 @@ Stars.propTypes = {
 const Controls = props => {
   const { movie } = props;
   return (
-    <Grid>
-      <Row>
-        <Col md={6} xs={6}>
-          <ButtonGroup>
-            <Button bsStyle="primary" onClick={props.getRandomMovie}><Glyphicon glyph="random" /> Random</Button>
-            <Link className="btn btn-default" to="/"><Glyphicon glyph="list" /> See all</Link>
-            <Button bsStyle="danger" onClick={props.deleteMovie}><Glyphicon glyph="trash" /> Delete</Button>
-          </ButtonGroup>
-        </Col>
-        <Col md={3} xs={6}>
-          <ButtonGroup>
-            {movie.seen ? '' : <Button bsStyle="primary" onClick={props.markSeen}><Glyphicon glyph="ok" /> Seen it!</Button>}
-          </ButtonGroup>
-        </Col>
-        </Row>
-  </Grid>
+    <ButtonGroup>
+      <Button bsStyle="primary" onClick={props.getRandomMovie}>
+        <Glyphicon glyph="random" /> Random
+      </Button>
+      <Link className="btn btn-default" to="/">
+        <Glyphicon glyph="list" /> See all
+      </Link>
+      <Button bsStyle="danger" onClick={props.deleteMovie}>
+        <Glyphicon glyph="trash" /> Delete
+      </Button>
+      {movie.seen ? '' :
+      <Button bsStyle="primary" onClick={props.markSeen}>
+        <Glyphicon glyph="ok" /> Seen it!
+      </Button>}
+    </ButtonGroup>
   );
-
 };
 
 Controls.propTypes = {
   getRandomMovie: PropTypes.func.isRequired,
   deleteMovie: PropTypes.func.isRequired,
-  markSeeen: PropTypes.func.isRequired,
+  markSeen: PropTypes.func.isRequired,
   movie: PropTypes.instanceOf(Movie).isRequired,
 };
 
@@ -83,16 +77,19 @@ export class MovieDetail extends React.Component {
   constructor(props) {
     super(props);
     this.actions = bindActionCreators(actions, this.props.dispatch);
-  }
-
-  deleteMovie(event) {
-    event.preventDefault();
-    this.actions.deleteMovie(this.props.movie);
+    this.getRandomMovie = this.getRandomMovie.bind(this);
+    this.deleteMovie = this.deleteMovie.bind(this);
+    this.markSeen = this.markSeen.bind(this);
   }
 
   getRandomMovie(event) {
     event.preventDefault();
     this.actions.getRandomMovie();
+  }
+
+  deleteMovie(event) {
+    event.preventDefault();
+    this.actions.deleteMovie(this.props.movie);
   }
 
   markSeen(event) {
@@ -110,10 +107,13 @@ export class MovieDetail extends React.Component {
       <Grid>
         <Row>
           <Col md={3}>
-            {movie.Poster === 'N/A'? 'No poster available' : <img className="img-responsive" src={movie.Poster} alt={movie.Title} />}
+            {movie.Poster === 'N/A' ?
+            'No poster available' :
+            <img className="img-responsive" src={movie.Poster} alt={movie.Title} />}
           </Col>
           <Col md={9}>
-            <h2>{movie.Title} {movie.seen ? <Badge pullRight={true}><Glyphicon glyph="ok" /> Seen it!</Badge> : ''}</h2>
+            <h2>{movie.Title} {movie.seen ?
+              <Badge pullRight><Glyphicon glyph="ok" /> Seen it!</Badge> : ''}</h2>
             <Stars movie={movie} />
             <dl className="dl-unstyled">
               <dt>Year</dt>
@@ -128,10 +128,12 @@ export class MovieDetail extends React.Component {
               <dd>{movie.Director}</dd>
             </dl>
             <p className="well">{movie.Plot}</p>
-            <Controls movie={movie}
-                      deleteMovie={this.deleteMovie.bind(this)}
-                      getRandomMovie={this.getRandomMovie.bind(this)}
-                      markSeen={this.markSeen.bind(this)} />
+            <Controls
+              movie={movie}
+              deleteMovie={this.deleteMovie}
+              getRandomMovie={this.getRandomMovie}
+              markSeen={this.markSeen}
+            />
           </Col>
         </Row>
       </Grid>
@@ -143,7 +145,7 @@ export class MovieDetail extends React.Component {
 MovieDetail.propTypes = {
   dispatch: PropTypes.func.isRequired,
   movie: PropTypes.instanceOf(Movie).isRequired,
-}
+};
 
 export default connect(state => {
   return {

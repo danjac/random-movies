@@ -9,24 +9,23 @@ import reducer from './reducers';
 const loggingMiddleware = createLogger({
   level: 'info',
   collapsed: true,
-  logger: console
+  logger: console,
 });
 
 export default function configureStore(history, initialState) {
-
   const routerMiddleware = syncHistory(history);
 
   const createStoreWithMiddleware = compose(
     applyMiddleware(
       routerMiddleware,
       thunkMiddleware,
-      loggingMiddleware,
+      loggingMiddleware
     ),
     devTools(),
     persistState(window.location.href.match(/[?&]debug_session=([^&]+)\b/))
   )(createStore);
 
   const store = createStoreWithMiddleware(reducer, initialState);
-  routerMiddleware.listenForReplays(store);
+  // routerMiddleware.listenForReplays(store);
   return store;
 }

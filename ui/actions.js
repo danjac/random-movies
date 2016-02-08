@@ -10,7 +10,9 @@ const createAction = (type, payload) => _.merge({ type }, { payload });
 
 export const movieLoaded = movie => createAction(Actions.MOVIE_LOADED, movie);
 
-export const addMessage = (status, message) => createAction(Actions.ADD_MESSAGE, { status, message });
+export const addMessage = (status, message) => {
+  return createAction(Actions.ADD_MESSAGE, { status, message });
+};
 
 export const dismissMessage = id => createAction(Actions.DISMISS_MESSAGE, id);
 
@@ -22,10 +24,10 @@ export function getMovie(id) {
     .getMovie(id)
     .then(result => dispatch(movieLoaded(result.data)))
     .catch(() => {
-      dispatch(addMessage(Alert.DANGER, "Sorry, no movie found"));
-      dispatch(routeActions.push("/"));
+      dispatch(addMessage(Alert.DANGER, 'Sorry, no movie found'));
+      dispatch(routeActions.push('/'));
     });
-  }
+  };
 }
 
 export function addMovie(title) {
@@ -45,15 +47,15 @@ export function addMovie(title) {
     .catch(() => {
       dispatch(addMessage(Alert.WARNING, `Sorry, couldn't find the movie "${title}"`));
     });
-  }
+  };
 }
 
 export function deleteMovie(movie) {
   return dispatch => {
     WebAPI.deleteMovie(movie.imdbID);
     dispatch(addMessage(Alert.INFO, `Movie "${movie.Title}" deleted`));
-    dispatch(routeActions.push("/"));
-  }
+    dispatch(routeActions.push('/'));
+  };
 }
 
 export function getMovies() {
@@ -62,7 +64,7 @@ export function getMovies() {
     .then(result => {
       dispatch(createAction(Actions.MOVIES_LOADED, result.data));
     });
-  }
+  };
 }
 
 export function clearMovie() {
@@ -74,12 +76,10 @@ export function getRandomMovie() {
     WebAPI
     .getRandomMovie()
     .then(result => dispatch(routeActions.push(`/movie/${result.data.imdbID}/`)));
-  }
+  };
 }
 
 export function markSeen(movie) {
   WebAPI.markSeen(movie.imdbID);
   return createAction(Actions.MARK_SEEN);
 }
-
-

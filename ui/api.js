@@ -1,16 +1,16 @@
 import axios from 'axios';
 
-axios.interceptors.request.use((config) => {
-    config.headers['X-CSRF-Token'] =  window.csrfToken;
-    return config;
+axios.interceptors.request.use(config => {
+  const headers = Object.assign({}, config.headers, { 'X-CSRF-Token': window.csrfToken });
+  return Object.assign({}, config, { headers });
 }, (error) => Promise.reject(error));
 
 export function getRandomMovie() {
-  return axios.get("/api/");
+  return axios.get('/api/');
 }
 
 export function getMovies() {
-  return axios.get("/api/all/");
+  return axios.get('/api/all/');
 }
 
 export function getMovie(id) {
@@ -26,5 +26,5 @@ export function markSeen(id) {
 }
 
 export function addMovie(title) {
-  return axios.post("/api/", { title: title });
+  return axios.post('/api/', { title });
 }
