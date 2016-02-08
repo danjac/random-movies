@@ -2,6 +2,12 @@ package server
 
 import (
 	"fmt"
+	"html/template"
+	"io"
+	"net/http"
+	"path/filepath"
+	"time"
+
 	"github.com/danjac/random_movies/database"
 	"github.com/danjac/random_movies/decoders"
 	"github.com/danjac/random_movies/errors"
@@ -10,11 +16,6 @@ import (
 	"github.com/labstack/echo"
 	mw "github.com/labstack/echo/middleware"
 	"golang.org/x/net/websocket"
-	"html/template"
-	"io"
-	"net/http"
-	"path/filepath"
-	"time"
 )
 
 type renderer struct {
@@ -51,7 +52,7 @@ type Config struct {
 	Port int
 }
 
-func (s *Server) Router() *http.Server {
+func (s *Server) Run() error {
 
 	e := echo.New()
 	e.SetDebug(true)
@@ -83,7 +84,9 @@ func (s *Server) Router() *http.Server {
 	api.Patch("seen/:id", s.markSeen)
 	api.Get("all/", s.getMovies)
 
-	return e.Server(fmt.Sprintf(":%v", s.Config.Port))
+	server := e.Server(fmt.Sprintf(":%v", s.Config.Port))
+	server.Handler = nosurf.NewPure(server.Handler)
+	return server.ListenAndServe()
 }
 
 func (s *Server) indexPage(c *echo.Context) error {

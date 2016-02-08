@@ -5,7 +5,6 @@ import (
 
 	"github.com/danjac/random_movies/database"
 	"github.com/danjac/random_movies/server"
-	"github.com/justinas/nosurf"
 )
 
 var (
@@ -37,10 +36,7 @@ func main() {
 		Port:         6060,
 	})
 
-	server := s.Router()
-	server.Handler = nosurf.NewPure(server.Handler)
-
-	if err := server.ListenAndServe(); err != nil {
+	if err := s.Run(); err != nil {
 		panic(err)
 	}
 
