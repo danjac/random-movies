@@ -19,8 +19,7 @@ function stripArticle(title) {
 }
 
 function getInitial(title) {
-  title = stripArticle(title);
-  var upCase = title.charAt(0).toUpperCase();
+  var upCase = stripArticle(title).charAt(0).toUpperCase();
   if (upCase.toLowerCase() !== upCase) { // ASCII letter
     return upCase;
   }
@@ -63,14 +62,14 @@ class MovieList extends React.Component {
 
   render() {
 
-    const movies = _.sortBy(this.props.movies);
-    const groups = _.groupBy(movies, movie => getInitial(movie.Title));
+    const { movies } = this.props;
+    const groups = movies.groupBy(movie => getInitial(movie.Title)).toJS();
     const cols = _.chunk(_.sortBy(Object.keys(groups)), 4);
     const rows = _.chunk(cols, 4);
 
     return (
       <div>
-        {movies.length ? <h3>Total {movies.length} movies</h3> : ''}
+        {movies.size ? <h3>Total {movies.size} movies</h3> : ''}
         <Grid>
         {rows.map((row, index) => {
           return (
@@ -94,12 +93,12 @@ class MovieList extends React.Component {
 
 MovieList.propTypes = {
   dispatch: PropTypes.func.isRequired,
-  movies: PropTypes.array
+  movies: PropTypes.object,
 };
 
 export default connect(state => {
   return {
-      movies: state.movies
+      movies: state.movies,
   };
 })(MovieList);
 

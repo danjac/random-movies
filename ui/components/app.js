@@ -22,7 +22,7 @@ import * as actions from '../actions';
 
 const Suggestion = props => {
     const { movie } = props;
-    if (!movie) return <span></span>;
+    if (!movie.imdbID) return <span></span>;
     return (
       <small>
         <b><em>Have you seen?</em></b> <Link to={`/movie/${movie.imdbID}/`}>{movie.Title} ({movie.Year}) </Link>
@@ -100,8 +100,8 @@ class AddMovieForm extends React.Component {
 
 class App extends React.Component {
 
-  constructor(props, context) {
-    super(props, context);
+  constructor(props) {
+    super(props);
     const { dispatch } = this.props;
     this.actions = bindActionCreators(actions, dispatch);
   }
@@ -121,7 +121,7 @@ class App extends React.Component {
 
 App.propTypes = {
   dispatch: PropTypes.func.isRequired,
-  messages: PropTypes.array,
+  messages: PropTypes.object,
   suggestion: PropTypes.object,
   children: PropTypes.node
 }
