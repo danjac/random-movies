@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { hashHistory } from 'react-router';
+import { browserHistory } from 'react-router';
 import { Provider } from 'react-redux';
 
 import Routes from './routes';
 import configureStore from './store';
 import { suggest } from './actions';
 
-const store = configureStore(hashHistory);
+const store = configureStore(browserHistory);
 
 new WebSocket(`ws://${window.location.host}/api/suggest`).onmessage = event => {
   store.dispatch(suggest(JSON.parse(event.data)));
@@ -16,7 +16,7 @@ new WebSocket(`ws://${window.location.host}/api/suggest`).onmessage = event => {
 const Container = () => {
   return (
     <Provider store={store}>
-      <Routes history={hashHistory} />
+      <Routes history={browserHistory} />
     </Provider>
   );
 };

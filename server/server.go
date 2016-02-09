@@ -58,6 +58,7 @@ func (s *Server) Run() error {
 	e.SetDebug(true)
 	e.Use(mw.Logger())
 	e.Use(mw.Recover())
+	e.Use(nosurf.NewPure)
 
 	// Render HTML
 
@@ -70,8 +71,7 @@ func (s *Server) Run() error {
 	// static configuration
 	e.Static(s.Config.StaticURL, s.Config.StaticDir)
 
-	// index page
-	e.Get("/", s.indexPage)
+	//e.Get("/", s.indexPage)
 
 	// API calls
 	api := e.Group("/api/")
@@ -84,9 +84,10 @@ func (s *Server) Run() error {
 	api.Patch("seen/:id", s.markSeen)
 	api.Get("all/", s.getMovies)
 
-	server := e.Server(fmt.Sprintf(":%v", s.Config.Port))
-	server.Handler = nosurf.NewPure(server.Handler)
-	return server.ListenAndServe()
+	e.Get("/*", s.indexPage)
+	e.Run(fmt.Sprintf(":%v", s.Config.Port))
+	return nil
+
 }
 
 func (s *Server) indexPage(c *echo.Context) error {

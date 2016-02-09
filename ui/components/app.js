@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { List } from 'immutable';
 
 // import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootswatch/slate/bootstrap.min.css';
+import 'bootswatch/superhero/bootstrap.min.css';
 
 import { Glyphicon, Alert } from 'react-bootstrap';
 
