@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/danjac/random_movies/errors"
-	"github.com/danjac/random_movies/models"
+	"httperrors"
+	"models"
 )
 
 // Finds a movie
@@ -47,7 +47,7 @@ func (impl *finderImpl) Find(title string) (*models.Movie, error) {
 	}
 
 	if movie.ImdbID == "" {
-		return nil, errors.ErrMovieNotFound
+		return nil, httperrors.ErrMovieNotFound
 	}
 
 	return movie, nil

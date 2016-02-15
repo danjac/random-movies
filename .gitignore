@@ -3,6 +3,8 @@ bower_components
 dist
 bin
 static
+pkg
+vendor/src
 _workspace
 *.swp
 *.log

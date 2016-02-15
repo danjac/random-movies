@@ -8,10 +8,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/danjac/random_movies/database"
-	"github.com/danjac/random_movies/decoders"
-	"github.com/danjac/random_movies/errors"
-	"github.com/danjac/random_movies/omdb"
+	"database"
+	"decoders"
+	"httperrors"
+	"omdb"
+
 	"github.com/justinas/nosurf"
 	"github.com/labstack/echo"
 	mw "github.com/labstack/echo/middleware"
@@ -85,6 +86,7 @@ func (s *Server) Run() error {
 	api.Get("all/", s.getMovies)
 
 	e.Get("/*", s.indexPage)
+
 	e.Run(fmt.Sprintf(":%v", s.Config.Port))
 	return nil
 
@@ -193,7 +195,7 @@ func (s *Server) addMovie(c *echo.Context) error {
 
 	oldMovie, err := s.DB.Get(movie.ImdbID)
 
-	if err == errors.ErrMovieNotFound {
+	if err == httperrors.ErrMovieNotFound {
 
 		if err := s.DB.Save(movie); err != nil {
 			return err

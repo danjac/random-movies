@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 
-	"github.com/danjac/random_movies/database"
-	"github.com/danjac/random_movies/server"
+	"database"
+	"server"
 )
 
 var (

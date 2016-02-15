@@ -1,8 +1,9 @@
 package database
 
 import (
-	"github.com/danjac/random_movies/errors"
-	"github.com/danjac/random_movies/models"
+	"httperrors"
+	"models"
+
 	"gopkg.in/redis.v3"
 )
 
@@ -58,7 +59,7 @@ func (db *defaultImpl) Delete(imdbID string) error {
 func (db *defaultImpl) GetRandom() (*models.Movie, error) {
 	imdbID, err := db.RandomKey().Result()
 	if err == redis.Nil {
-		return nil, errors.ErrMovieNotFound
+		return nil, httperrors.ErrMovieNotFound
 	}
 	if err != nil {
 		return nil, err
@@ -70,7 +71,7 @@ func (db *defaultImpl) Get(imdbID string) (*models.Movie, error) {
 	movie := &models.Movie{}
 	if err := db.Client.Get(imdbID).Scan(movie); err != nil {
 		if err == redis.Nil {
-			return nil, errors.ErrMovieNotFound
+			return nil, httperrors.ErrMovieNotFound
 		} else {
 			return nil, err
 		}

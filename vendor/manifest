@@ -1,0 +1,94 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/asaskevich/govalidator",
+			"repository": "https://github.com/asaskevich/govalidator",
+			"revision": "9699ab6b38bee2e02cd3fe8b99ecf67665395c96",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/hoisie/web",
+			"repository": "https://github.com/hoisie/web",
+			"revision": "bb5992ad5e02a2b8bd2a69fae788781d4b1f80a9",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/justinas/nosurf",
+			"repository": "https://github.com/justinas/nosurf",
+			"revision": "15aad14338c4d52da7213594578e93684fe5518c",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/labstack/echo",
+			"repository": "https://github.com/labstack/echo",
+			"revision": "849000076287d6fdda4096792d188e704d22526e",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/labstack/gommon/color",
+			"repository": "https://github.com/labstack/gommon",
+			"revision": "bfff5bf04688a4048a5cb4dd3b3f0697caaad19c",
+			"branch": "master",
+			"path": "/color"
+		},
+		{
+			"importpath": "github.com/labstack/gommon/log",
+			"repository": "https://github.com/labstack/gommon",
+			"revision": "bfff5bf04688a4048a5cb4dd3b3f0697caaad19c",
+			"branch": "master",
+			"path": "/log"
+		},
+		{
+			"importpath": "github.com/mattn/go-colorable",
+			"repository": "https://github.com/mattn/go-colorable",
+			"revision": "9fdad7c47650b7d2e1da50644c1f4ba7f172f252",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/mattn/go-isatty",
+			"repository": "https://github.com/mattn/go-isatty",
+			"revision": "56b76bdf51f7708750eac80fa38b952bb9f32639",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/zenazn/goji",
+			"repository": "https://github.com/zenazn/goji",
+			"revision": "859bfa93a8db583de1dd72a1edcbf4bb75c0dbbe",
+			"branch": "master"
+		},
+		{
+			"importpath": "golang.org/x/net/context",
+			"repository": "https://go.googlesource.com/net",
+			"revision": "cbbbe2bc0f2efdd2afb318d93f1eadb19350e4a3",
+			"branch": "master",
+			"path": "/context"
+		},
+		{
+			"importpath": "golang.org/x/net/http2",
+			"repository": "https://go.googlesource.com/net",
+			"revision": "cbbbe2bc0f2efdd2afb318d93f1eadb19350e4a3",
+			"branch": "master",
+			"path": "/http2"
+		},
+		{
+			"importpath": "golang.org/x/net/websocket",
+			"repository": "https://go.googlesource.com/net",
+			"revision": "cbbbe2bc0f2efdd2afb318d93f1eadb19350e4a3",
+			"branch": "master",
+			"path": "/websocket"
+		},
+		{
+			"importpath": "gopkg.in/bsm/ratelimit.v1",
+			"repository": "https://gopkg.in/bsm/ratelimit.v1",
+			"revision": "f14ad9c78b155f69b480cfa41cb655259baac260",
+			"branch": "v1"
+		},
+		{
+			"importpath": "gopkg.in/redis.v3",
+			"repository": "https://gopkg.in/redis.v3",
+			"revision": "298fdec44579d427ee4c50483e5ccda1ebdcc204",
+			"branch": "master"
+		}
+	]
+}
