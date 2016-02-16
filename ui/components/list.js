@@ -13,7 +13,6 @@ import {
 
 
 import * as actions from '../actions';
-import { Movie } from '../records';
 
 function stripArticle(title) {
   return title.match(/^the\s/i) ? title.substring(4) : title;
@@ -39,7 +38,7 @@ const ListItem = props => {
 };
 
 ListItem.propTypes = {
-  movie: PropTypes.instanceOf(Movie).isRequired,
+  movie: PropTypes.object.isRequired,
 };
 
 
@@ -75,18 +74,15 @@ class MovieList extends React.Component {
     const { movies } = this.props;
     const groups = movies.groupBy(movie => getInitial(movie.Title)).toJS();
     const cols = _.chunk(_.sortBy(Object.keys(groups)), 4);
-    const rows = _.chunk(cols, 4);
 
     return (
       <div>
         {movies.size ? <h3>Total {movies.size} movies</h3> : ''}
         <Grid>
-        {rows.map((row, rowIndex) => {
-          return (
-            <Row key={rowIndex}>
-              {row.map((col, colIndex) => {
+          <Row>
+              {cols.map((col, colIndex) => {
                 return (
-                  <Col key={colIndex} md={3}>
+                  <Col key={colIndex} md={2} sm={2}>
                     {col.map(initial => {
                       return (
                         <InitialGroup
@@ -99,8 +95,6 @@ class MovieList extends React.Component {
                 );
               })}
             </Row>
-          );
-        })}
         </Grid>
       </div>
     );

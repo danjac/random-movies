@@ -50,7 +50,7 @@ module.exports = {
         test: /\.js$/,
         loader: 'babel-loader',
         query: {
-          presets: ['react', 'es2015', 'stage-0']
+          presets: ['react', 'es2015', 'stage-0'],
         },
         include: path.join(__dirname, 'ui'),
         exclude: path.join(__dirname, 'node_modules')

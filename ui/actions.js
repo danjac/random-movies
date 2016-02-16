@@ -1,12 +1,10 @@
-import _ from 'lodash';
-
 import { routeActions } from 'react-router-redux';
 
 import { Actions, Alert } from './constants';
 import * as WebAPI from './api';
 
 // creates a standard FSA payload object
-const createAction = (type, payload) => _.merge({ type }, { payload });
+const createAction = (type, payload) => ({ type, payload });
 
 export const movieLoaded = movie => createAction(Actions.MOVIE_LOADED, movie);
 
@@ -38,11 +36,11 @@ export function addMovie(title) {
       const movie = result.data;
       if (result.status === 201) {
         dispatch(addMessage(Alert.SUCCESS, `New movie "${movie.Title}" added to your collection`));
-        dispatch(routeActions.push(`/movie/${movie.imdbID}/`));
         dispatch(movieLoaded(movie));
       } else {
         dispatch(addMessage(Alert.INFO, `"${movie.Title}" is already in your collection`));
       }
+      dispatch(routeActions.push(`/movie/${movie.imdbID}/`));
     })
     .catch(() => {
       dispatch(addMessage(Alert.WARNING, `Sorry, couldn't find the movie "${title}"`));
