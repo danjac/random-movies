@@ -28,7 +28,7 @@ func (r *renderer) Render(w io.Writer, name string, data interface{}) error {
 	return r.templates.ExecuteTemplate(w, name, data)
 }
 
-const SOCKET_WAIT_FOR = 15 * time.Second
+const socketWaitFor = 15 * time.Second
 
 func New(db database.DB, config *Config) *Server {
 	return &Server{
@@ -148,10 +148,9 @@ func (s *Server) suggest(c *echo.Context) error {
 				return err
 			}
 
-			time.Sleep(SOCKET_WAIT_FOR)
+			time.Sleep(socketWaitFor)
 		}
 	}
-	return nil
 
 }
 
