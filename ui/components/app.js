@@ -5,7 +5,7 @@ import { List } from 'immutable';
 // import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootswatch/cyborg/bootstrap.min.css';
 
-import { Glyphicon, Alert } from 'react-bootstrap';
+import { Glyphicon, Alert, Button } from 'react-bootstrap';
 
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
@@ -34,14 +34,18 @@ Suggestion.propTypes = {
 
 const Header = props => {
   return (
-    <div className="page-header">
+    <div className="page-header text-center">
       <Suggestion movie={props.suggestion} />
-      <h1><Glyphicon glyph="film" /> Movie Wishlist</h1>
+      <h1><Link to="/" style={{ color: '#fff' }}>Movie Wishlist</Link></h1>
+      <Button className="form-control" bsStyle="primary" onClick={props.getRandomMovie}>
+        <Glyphicon glyph="random" /> Random
+      </Button>
     </div>
   );
 };
 
 Header.propTypes = {
+  getRandomMovie: PropTypes.func.isRequired,
   suggestion: PropTypes.instanceOf(Movie).isRequired,
 };
 
@@ -82,7 +86,7 @@ class App extends React.Component {
   render() {
     return (
       <div className="container">
-        <Header suggestion={this.props.suggestion} />
+        <Header suggestion={this.props.suggestion} getRandomMovie={this.actions.getRandomMovie} />
         <Alerts
           dismissMessage={this.actions.dismissMessage}
           messages={this.props.messages}

@@ -70,6 +70,10 @@ class MovieList extends React.Component {
     this.actions = bindActionCreators(actions, dispatch);
   }
 
+  componentWillMount() {
+    this.actions.getMovies();
+  }
+
   render() {
     const { movies } = this.props;
     const groups = movies.groupBy(movie => getInitial(movie.Title)).toJS();

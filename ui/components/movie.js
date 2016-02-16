@@ -48,9 +48,6 @@ const Controls = props => {
   const { movie } = props;
   return (
     <ButtonGroup>
-      <Button bsStyle="primary" onClick={props.getRandomMovie}>
-        <Glyphicon glyph="random" /> Random
-      </Button>
       <Link className="btn btn-default" to="/">
         <Glyphicon glyph="list" /> See all
       </Link>
@@ -66,7 +63,6 @@ const Controls = props => {
 };
 
 Controls.propTypes = {
-  getRandomMovie: PropTypes.func.isRequired,
   deleteMovie: PropTypes.func.isRequired,
   markSeen: PropTypes.func.isRequired,
   movie: PropTypes.instanceOf(Movie).isRequired,
@@ -77,14 +73,22 @@ export class MovieDetail extends React.Component {
   constructor(props) {
     super(props);
     this.actions = bindActionCreators(actions, this.props.dispatch);
-    this.getRandomMovie = this.getRandomMovie.bind(this);
     this.deleteMovie = this.deleteMovie.bind(this);
     this.markSeen = this.markSeen.bind(this);
   }
 
-  getRandomMovie(event) {
-    event.preventDefault();
-    this.actions.getRandomMovie();
+  componentWillMount() {
+    this.getMovie(this.props.params.id);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.params.id !== this.props.params.id) {
+      this.getMovie(nextProps.params.id);
+    }
+  }
+
+  getMovie(id) {
+    this.actions.getMovie(id);
   }
 
   deleteMovie(event) {
@@ -131,7 +135,6 @@ export class MovieDetail extends React.Component {
             <Controls
               movie={movie}
               deleteMovie={this.deleteMovie}
-              getRandomMovie={this.getRandomMovie}
               markSeen={this.markSeen}
             />
           </Col>
@@ -143,6 +146,7 @@ export class MovieDetail extends React.Component {
 }
 
 MovieDetail.propTypes = {
+  params: PropTypes.object.isRequired,
   dispatch: PropTypes.func.isRequired,
   movie: PropTypes.instanceOf(Movie).isRequired,
 };
