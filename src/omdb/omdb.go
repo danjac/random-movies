@@ -2,7 +2,6 @@ package omdb
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -36,13 +35,8 @@ func (impl *finderImpl) Find(title string) (*models.Movie, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
 	movie := &models.Movie{}
-	if err := json.Unmarshal(body, movie); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&movie); err != nil {
 		return nil, err
 	}
 
