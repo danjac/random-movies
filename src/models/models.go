@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 )
 
+// Movie is OMDB-sourced movie info
 type Movie struct {
 	Title    string
 	Actors   string
@@ -23,10 +24,12 @@ func (m *Movie) String() string {
 	return m.Title
 }
 
+// MarshalBinary allows writes to Redis
 func (m *Movie) MarshalBinary() ([]byte, error) {
 	return json.Marshal(m)
 }
 
+// UnmarshalBinary allows reads from Redis
 func (m *Movie) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, m)
 }

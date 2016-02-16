@@ -9,12 +9,12 @@ import (
 	"models"
 )
 
-// Finds a movie
+// Finder finds a movie based on title
 type Finder interface {
 	Find(title string) (*models.Movie, error)
 }
 
-// returns default implementation
+// New returns default implementation
 func New() Finder {
 	return &finderImpl{}
 }

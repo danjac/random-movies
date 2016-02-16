@@ -2,14 +2,17 @@ package decoders
 
 import (
 	"encoding/json"
-	"github.com/asaskevich/govalidator"
 	"net/http"
+
+	"github.com/asaskevich/govalidator"
 )
 
+// MovieDecoder decodes and validates user input
 type MovieDecoder struct {
 	Title string `valid:"required"`
 }
 
+// Decode decodes user input
 func (f *MovieDecoder) Decode(r *http.Request) error {
 	return decode(r, f)
 }

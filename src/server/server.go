@@ -30,6 +30,7 @@ func (r *renderer) Render(w io.Writer, name string, data interface{}) error {
 
 const socketWaitFor = 15 * time.Second
 
+// New returns new server implementation
 func New(db database.DB, config *Config) *Server {
 	return &Server{
 		DB:     db,
@@ -38,13 +39,14 @@ func New(db database.DB, config *Config) *Server {
 	}
 }
 
-// context globals (not threadsafe, so only store thread-safe objects here)
+// Server is an instance of web app
 type Server struct {
 	Config *Config
 	OMDB   omdb.Finder
 	DB     database.DB
 }
 
+// Config holds settings and env variables
 type Config struct {
 	Env,
 	StaticURL,
@@ -53,6 +55,7 @@ type Config struct {
 	Port int
 }
 
+// Run the server instance at given port
 func (s *Server) Run() error {
 
 	e := echo.New()

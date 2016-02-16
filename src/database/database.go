@@ -7,29 +7,34 @@ import (
 	"gopkg.in/redis.v3"
 )
 
-type MovieFinder interface {
+// MovieReader reads data from the store
+type MovieReader interface {
 	GetAll() ([]*models.Movie, error)
 	GetRandom() (*models.Movie, error)
 	Get(string) (*models.Movie, error)
 }
 
-type MovieUpdater interface {
+// MovieWriter writes data to the store
+type MovieWriter interface {
 	Delete(string) error
 	MarkSeen(string) error
 	Save(*models.Movie) error
 }
 
+// DB handles reads/writes to/from the store
 type DB interface {
-	MovieFinder
-	MovieUpdater
+	MovieReader
+	MovieWriter
 }
 
+// Config holds database configuration info
 type Config struct {
 	URL      string
 	Password string
 	DB       int64
 }
 
+// DefaultConfig creates config with sensible defaults
 func DefaultConfig() *Config {
 	return &Config{
 		URL:      "localhost:6379",
@@ -38,6 +43,7 @@ func DefaultConfig() *Config {
 	}
 }
 
+// New returns a new database instance
 func New(config *Config) (DB, error) {
 	db := &defaultImpl{redis.NewClient(&redis.Options{
 		Addr:     config.URL,
@@ -72,9 +78,8 @@ func (db *defaultImpl) Get(imdbID string) (*models.Movie, error) {
 	if err := db.Client.Get(imdbID).Scan(movie); err != nil {
 		if err == redis.Nil {
 			return nil, httperrors.ErrMovieNotFound
-		} else {
-			return nil, err
 		}
+		return nil, err
 	}
 	return movie, nil
 }
