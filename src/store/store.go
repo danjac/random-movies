@@ -1,11 +1,14 @@
 package store
 
 import (
-	"httperrors"
+	"errors"
 	"models"
 
 	"gopkg.in/redis.v3"
 )
+
+// ErrMovieNotFound is returned if no movie found
+var ErrMovieNotFound = errors.New("Movie not found")
 
 // MovieReader reads data from the store
 type MovieReader interface {
@@ -65,7 +68,7 @@ func (db *defaultImpl) Delete(imdbID string) error {
 func (db *defaultImpl) GetRandom() (*models.Movie, error) {
 	imdbID, err := db.RandomKey().Result()
 	if err == redis.Nil {
-		return nil, httperrors.ErrMovieNotFound
+		return nil, ErrMovieNotFound
 	}
 	if err != nil {
 		return nil, err
@@ -77,7 +80,7 @@ func (db *defaultImpl) Get(imdbID string) (*models.Movie, error) {
 	movie := &models.Movie{}
 	if err := db.Client.Get(imdbID).Scan(movie); err != nil {
 		if err == redis.Nil {
-			return nil, httperrors.ErrMovieNotFound
+			return nil, ErrMovieNotFound
 		}
 		return nil, err
 	}

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"store"
 
-	"httperrors"
 	"models"
 )
 
@@ -41,7 +41,7 @@ func (impl *finderImpl) Find(title string) (*models.Movie, error) {
 	}
 
 	if movie.ImdbID == "" {
-		return nil, httperrors.ErrMovieNotFound
+		return nil, store.ErrMovieNotFound
 	}
 
 	return movie, nil

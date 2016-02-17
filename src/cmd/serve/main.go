@@ -22,7 +22,7 @@ func main() {
 
 	flag.Parse()
 
-	db, err := store.New(database.DefaultConfig())
+	db, err := store.New(store.DefaultConfig())
 
 	if err != nil {
 		panic(err)

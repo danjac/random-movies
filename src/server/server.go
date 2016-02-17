@@ -9,8 +9,8 @@ import (
 	"store"
 	"time"
 
-	"decoders"
-	"httperrors"
+	"github.com/asaskevich/govalidator"
+
 	"omdb"
 
 	"github.com/justinas/nosurf"
@@ -18,6 +18,14 @@ import (
 	mw "github.com/labstack/echo/middleware"
 	"golang.org/x/net/websocket"
 )
+
+func decode(c *echo.Context, data interface{}) error {
+	if err := c.Bind(data); err != nil {
+		return err
+	}
+	_, err := govalidator.ValidateStruct(data)
+	return err
+}
 
 type renderer struct {
 	templates *template.Template
@@ -43,7 +51,7 @@ func New(db store.DB, config *Config) *Server {
 type Server struct {
 	Config *Config
 	OMDB   omdb.Finder
-	DB     database.DB
+	DB     store.DB
 }
 
 // Config holds settings and env variables
@@ -63,6 +71,17 @@ func (s *Server) Run() error {
 	e.Use(mw.Logger())
 	e.Use(mw.Recover())
 	e.Use(nosurf.NewPure)
+
+	// handle not found error
+	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			err := h(c)
+			if err == store.ErrMovieNotFound {
+				return echo.NewHTTPError(http.StatusNotFound)
+			}
+			return err
+		}
+	})
 
 	// Render HTML
 
@@ -184,12 +203,14 @@ func (s *Server) getMovies(c *echo.Context) error {
 }
 
 func (s *Server) addMovie(c *echo.Context) error {
-	f := &decoders.MovieDecoder{}
-	if err := c.Bind(f); err != nil {
+	d := &struct {
+		Title string `valid:"required"`
+	}{}
+	if err := decode(c, d); err != nil {
 		return err
 	}
 
-	movie, err := s.OMDB.Find(f.Title)
+	movie, err := s.OMDB.Find(d.Title)
 
 	if err != nil {
 		return err
@@ -197,7 +218,7 @@ func (s *Server) addMovie(c *echo.Context) error {
 
 	oldMovie, err := s.DB.Get(movie.ImdbID)
 
-	if err == httperrors.ErrMovieNotFound {
+	if err == store.ErrMovieNotFound {
 
 		if err := s.DB.Save(movie); err != nil {
 			return err
