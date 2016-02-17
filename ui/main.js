@@ -9,6 +9,7 @@ import configureStore from './store';
 import { suggest } from './actions';
 
 browserHistory.listen(() => window.scrollTo(0, 0));
+
 const store = configureStore(browserHistory);
 const routes = configureRoutes(browserHistory, store);
 

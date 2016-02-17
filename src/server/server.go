@@ -6,9 +6,9 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"store"
 	"time"
 
-	"database"
 	"decoders"
 	"httperrors"
 	"omdb"
@@ -31,7 +31,7 @@ func (r *renderer) Render(w io.Writer, name string, data interface{}) error {
 const socketWaitFor = 15 * time.Second
 
 // New returns new server implementation
-func New(db database.DB, config *Config) *Server {
+func New(db store.DB, config *Config) *Server {
 	return &Server{
 		DB:     db,
 		OMDB:   omdb.New(),
@@ -68,7 +68,7 @@ func (s *Server) Run() error {
 
 	templates, err := template.ParseGlob(filepath.Join("./templates", "*.tmpl"))
 	if err != nil {
-		panic(err) // shouldn't do this
+		return err
 	}
 	e.SetRenderer(&renderer{templates})
 

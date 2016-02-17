@@ -5,7 +5,7 @@ var UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
 
 require('es6-promise').polyfill();
 
-var env = process.env.WEBPACK_ENV;
+var env = process.env.WEBPACK_ENV || 'dev';
 
 var entry = ['babel-polyfill', './main.js'];
 
@@ -15,13 +15,17 @@ var plugins = [
   })
 ];
 
-switch(process.env.WEBPACK_ENV) {
+var jsloaders = ['babel-loader?presets[]=react,presets[]=es2015'];
+
+switch(env) {
   case 'dev':
   entry.unshift('webpack-dev-server/client?http://localhost:8080');
   entry.unshift('webpack/hot/only-dev-server');
   plugins.unshift(new webpack.HotModuleReplacementPlugin());
+  jsloaders.unshift('react-hot');
   break;
-  case 'prod':
+  case 'production':
+  plugins.push(new DefinePlugin({ 'process.env': { NODE_ENV: 'production '} }));
   plugins.push(new UglifyJsPlugin({ minimize: true }));
   break;
 }
@@ -46,12 +50,10 @@ module.exports = {
         test: /\.(png|woff|woff2|eot|ttf|svg)$/,
         loader: 'url-loader?limit=200000'
       },
+
       {
         test: /\.js$/,
-        loader: 'babel-loader',
-        query: {
-          presets: ['react', 'es2015', 'stage-0'],
-        },
+        loaders: jsloaders,
         include: path.join(__dirname, 'ui'),
         exclude: path.join(__dirname, 'node_modules')
       }

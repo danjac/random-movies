@@ -108,24 +108,22 @@ export class MovieDetail extends React.Component {
     }
 
     return (
-      <Grid>
-        <Row>
+      <div>
+        <h2>{movie.Title}&nbsp;
+          {movie.seen ?
+            <Badge><Glyphicon glyph="ok" /> Seen it!</Badge> : ''}
+          </h2>
+          <Row>
           <Col md={3}>
             {movie.Poster === 'N/A' ?
             'No poster available' :
             <img className="img-responsive" src={movie.Poster} alt={movie.Title} />}
           </Col>
           <Col md={9}>
-            <h2>{movie.Title} {movie.seen ?
-              <Badge pullRight><Glyphicon glyph="ok" /> Seen it!</Badge> : ''}</h2>
             <Stars movie={movie} />
             <dl className="dl-unstyled">
               <dt>Year</dt>
               <dd>{movie.Year}</dd>
-              <dt>Genre</dt>
-              <dd>{movie.Genre}</dd>
-              <dt>Rated</dt>
-              <dd>{movie.Rated}</dd>
               <dt>Actors</dt>
               <dd>{movie.Actors}</dd>
               <dt>Director</dt>
@@ -139,7 +137,7 @@ export class MovieDetail extends React.Component {
             />
           </Col>
         </Row>
-      </Grid>
+      </div>
     );
   }
 

@@ -16,13 +16,8 @@ export const dismissMessage = id => createAction(Actions.DISMISS_MESSAGE, id);
 
 export const suggest = movie => createAction(Actions.NEW_SUGGESTION, movie);
 
-export function clearMovie() {
-  return movieLoaded(null);
-}
-
 export function getMovie(id) {
   return dispatch => {
-    dispatch(clearMovie());
     WebAPI
     .getMovie(id)
     .then(result => dispatch(movieLoaded(result.data)))
@@ -70,9 +65,12 @@ export function getMovies() {
   };
 }
 
+export function clearMovie() {
+  return movieLoaded(null);
+}
+
 export function getRandomMovie() {
   return dispatch => {
-    dispatch(clearMovie());
     WebAPI
     .getRandomMovie()
     .then(result => dispatch(routeActions.push(`/movie/${result.data.imdbID}/`)));

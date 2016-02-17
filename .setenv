@@ -1,0 +1,6 @@
+# set environment variables for vim-go/syntastic
+# to setup $GOPATH properly for gb
+# source this file
+
+export PROJECT_DIR=`realpath .`
+export GOPATH=$GOPATH:$PROJECT_DIR:$PROJECT_DIR/vendor

@@ -64,14 +64,8 @@ InitialGroup.propTypes = {
 
 class MovieList extends React.Component {
 
-  constructor(props) {
-    super(props);
-    const { dispatch } = this.props;
-    this.actions = bindActionCreators(actions, dispatch);
-  }
-
   componentWillMount() {
-    this.actions.getMovies();
+    this.props.actions.getMovies();
   }
 
   render() {
@@ -107,12 +101,12 @@ class MovieList extends React.Component {
 }
 
 MovieList.propTypes = {
-  dispatch: PropTypes.func.isRequired,
+  actions: PropTypes.object.isRequired,
   movies: PropTypes.instanceOf(List),
 };
 
-export default connect(state => {
-  return {
-    movies: state.movies,
-  };
-})(MovieList);
+export default connect(state => ({
+  movies: state.movies,
+}), dispatch => ({
+  actions: bindActionCreators(actions, dispatch),
+}))(MovieList);

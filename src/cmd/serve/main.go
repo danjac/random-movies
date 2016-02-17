@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 
-	"database"
 	"server"
+	"store"
 )
 
 var (
@@ -22,7 +22,7 @@ func main() {
 
 	flag.Parse()
 
-	db, err := database.New(database.DefaultConfig())
+	db, err := store.New(database.DefaultConfig())
 
 	if err != nil {
 		panic(err)
