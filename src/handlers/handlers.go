@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/labstack/gommon/log"
 
 	"omdb"
 
@@ -68,7 +69,12 @@ type handlerFunc func(*context, http.ResponseWriter, *http.Request) error
 func (c *context) handler(fn handlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := fn(c, w, r); err != nil {
-			// handle errors here
+			if err == store.ErrMovieNotFound {
+				http.NotFound(w, r)
+				return
+			}
+			log.Error(err)
+			http.Error(w, "An error has occurred", http.StatusInternalServerError)
 		}
 	})
 }
@@ -84,12 +90,11 @@ func (app *App) Run() error {
 	}
 
 	router := mux.NewRouter()
+	//router.StrictSlash(true)
 
 	router.PathPrefix(app.Config.StaticURL).Handler(
 		http.StripPrefix(app.Config.StaticURL,
 			http.FileServer(http.Dir(app.Config.StaticDir))))
-
-	router.Handle("/", c.handler(indexPage)).Methods("GET")
 
 	api := router.PathPrefix("/api").Subrouter()
 
@@ -100,6 +105,8 @@ func (app *App) Run() error {
 	api.Handle("/movie/{id}", c.handler(deleteMovie)).Methods("DELETE")
 	api.Handle("/seen/{id}", c.handler(markSeen)).Methods("PATCH")
 	api.Handle("/all/", c.handler(getMovies)).Methods("GET")
+
+	router.Handle("/{path:.*}", c.handler(indexPage)).Methods("GET")
 
 	n := negroni.Classic()
 	n.UseHandler(nosurf.New(router))
