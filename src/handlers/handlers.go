@@ -1,11 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
-	"html/template"
-	"io"
 	"net/http"
-	"path/filepath"
 	"store"
 	"time"
 
@@ -13,37 +11,24 @@ import (
 
 	"omdb"
 
+	"github.com/codegangsta/negroni"
+	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/justinas/nosurf"
-	"github.com/labstack/echo"
-	mw "github.com/labstack/echo/middleware"
-	"golang.org/x/net/websocket"
+	"github.com/unrolled/render"
 )
 
-const appContextKey = "app"
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
 
-func decode(c *echo.Context, data interface{}) error {
-	if err := c.Bind(data); err != nil {
+func decode(r *http.Request, data interface{}) error {
+	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
 		return err
 	}
 	_, err := govalidator.ValidateStruct(data)
 	return err
-}
-
-type renderer struct {
-	templates *template.Template
-}
-
-// Render HTML
-func (r *renderer) Render(w io.Writer, name string, data interface{}) error {
-	return r.templates.ExecuteTemplate(w, name, data)
-}
-
-func newRenderer(path string) (echo.Renderer, error) {
-	templates, err := template.ParseGlob(path)
-	if err != nil {
-		return nil, err
-	}
-	return &renderer{templates}, nil
 }
 
 const socketWaitFor = 15 * time.Second
@@ -64,10 +49,6 @@ type App struct {
 	DB     store.DB
 }
 
-func getApp(c *echo.Context) *App {
-	return c.Get(appContextKey).(*App)
-}
-
 // Config holds settings and env variables
 type Config struct {
 	Env,
@@ -77,178 +58,172 @@ type Config struct {
 	Port int
 }
 
+type context struct {
+	*App
+	Render *render.Render
+}
+
+type handlerFunc func(*context, http.ResponseWriter, *http.Request) error
+
+func (c *context) handler(fn handlerFunc) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := fn(c, w, r); err != nil {
+			// handle errors here
+		}
+	})
+}
+
 // Run the server instance at given port
 func (app *App) Run() error {
 
-	e := echo.New()
-	e.SetDebug(true)
-	e.Use(mw.Logger())
-	e.Use(mw.Recover())
-	e.Use(nosurf.NewPure)
-
-	// add instance to context
-	e.Use(func(c *echo.Context) error {
-		c.Set(appContextKey, app)
-		return nil
-	})
-
-	// handle not found error
-	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
-		return func(c *echo.Context) error {
-			err := h(c)
-			if err == store.ErrMovieNotFound {
-				return echo.NewHTTPError(http.StatusNotFound)
-			}
-			return err
-		}
-	})
-
-	renderer, err := newRenderer(filepath.Join("./templates", "*.tmpl"))
-	if err != nil {
-		return err
+	c := &context{
+		App: app,
+		Render: render.New(render.Options{
+			DisableHTTPErrorRendering: true,
+		}),
 	}
 
-	e.SetRenderer(renderer)
+	router := mux.NewRouter()
 
-	// static configuration
-	e.Static(app.Config.StaticURL, app.Config.StaticDir)
+	router.PathPrefix(app.Config.StaticURL).Handler(
+		http.StripPrefix(app.Config.StaticURL,
+			http.FileServer(http.Dir(app.Config.StaticDir))))
 
-	// API calls
-	api := e.Group("/api/")
+	router.Handle("/", c.handler(indexPage)).Methods("GET")
 
-	api.Get("", getRandomMovie)
-	api.Post("", addMovie)
-	api.WebSocket("suggest", suggest)
-	api.Get("movie/:id", getMovie)
-	api.Delete("movie/:id", deleteMovie)
-	api.Patch("seen/:id", markSeen)
-	api.Get("all/", getMovies)
+	api := router.PathPrefix("/api").Subrouter()
 
-	e.Get("/*", indexPage)
+	api.Handle("/", c.handler(getRandomMovie)).Methods("GET")
+	api.Handle("/", c.handler(addMovie)).Methods("POST")
+	api.Handle("/suggest", c.handler(suggest)).Methods("GET")
+	api.Handle("/movie/{id}", c.handler(getMovie)).Methods("GET")
+	api.Handle("/movie/{id}", c.handler(deleteMovie)).Methods("DELETE")
+	api.Handle("/seen/{id}", c.handler(markSeen)).Methods("PATCH")
+	api.Handle("/all/", c.handler(getMovies)).Methods("GET")
 
-	e.Run(fmt.Sprintf(":%v", app.Config.Port))
+	n := negroni.Classic()
+	n.UseHandler(nosurf.New(router))
+	n.Run(fmt.Sprintf(":%v", app.Config.Port))
 	return nil
-
 }
 
-func indexPage(c *echo.Context) error {
-	app := getApp(c)
+func indexPage(c *context, w http.ResponseWriter, r *http.Request) error {
 
 	var staticHost string
 
-	if app.Config.Env == "dev" {
-		staticHost = app.Config.DevServerURL
+	if c.Config.Env == "dev" {
+		staticHost = c.Config.DevServerURL
 	}
 
-	csrfToken := nosurf.Token(c.Request())
+	csrfToken := nosurf.Token(r)
 
 	data := map[string]string{
 		"staticHost": staticHost,
-		"env":        app.Config.Env,
+		"env":        c.Config.Env,
 		"csrfToken":  csrfToken,
 	}
-	return c.Render(http.StatusOK, "index.tmpl", data)
+	return c.Render.HTML(w, http.StatusOK, "index", data)
 }
 
-func markSeen(c *echo.Context) error {
-	if err := getApp(c).DB.MarkSeen(c.Param("id")); err != nil {
+func markSeen(c *context, w http.ResponseWriter, r *http.Request) error {
+	if err := c.DB.MarkSeen(mux.Vars(r)["id"]); err != nil {
 		return err
 	}
-	return c.String(http.StatusOK, "Movie seen")
+	return c.Render.Text(w, http.StatusOK, "Movie seen")
 }
 
-func getRandomMovie(c *echo.Context) error {
+func getRandomMovie(c *context, w http.ResponseWriter, r *http.Request) error {
 
-	movie, err := getApp(c).DB.GetRandom()
+	movie, err := c.DB.GetRandom()
 
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, movie)
+	return c.Render.JSON(w, http.StatusOK, movie)
 }
 
-func suggest(c *echo.Context) error {
+func suggest(c *context, w http.ResponseWriter, r *http.Request) error {
 
-	ws := c.Socket()
-	logger := c.Echo().Logger()
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return err
+	}
 
 	for {
 
 		for {
 
-			movie, err := getApp(c).DB.GetRandom()
+			movie, err := c.DB.GetRandom()
 
 			if err != nil {
-				logger.Error(err)
 				continue
 			}
 
-			if err := websocket.JSON.Send(ws, movie); err != nil {
+			if err := conn.WriteJSON(movie); err != nil {
 				return err
 			}
 
 			time.Sleep(socketWaitFor)
 		}
 	}
+	return nil
 
 }
 
-func getMovie(c *echo.Context) error {
-	movie, err := getApp(c).DB.Get(c.Param("id"))
+func getMovie(c *context, w http.ResponseWriter, r *http.Request) error {
+	movie, err := c.DB.Get(mux.Vars(r)["id"])
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, movie)
+	return c.Render.JSON(w, http.StatusOK, movie)
 }
 
-func deleteMovie(c *echo.Context) error {
-	imdbID := c.Param("id")
-	if err := getApp(c).DB.Delete(imdbID); err != nil {
+func deleteMovie(c *context, w http.ResponseWriter, r *http.Request) error {
+	imdbID := mux.Vars(r)["id"]
+	if err := c.DB.Delete(imdbID); err != nil {
 		return err
 	}
-	return c.String(http.StatusOK, "Movie deleted")
+	return c.Render.Text(w, http.StatusOK, "Movie deleted")
 }
 
-func getMovies(c *echo.Context) error {
-	movies, err := getApp(c).DB.GetAll()
+func getMovies(c *context, w http.ResponseWriter, r *http.Request) error {
+	movies, err := c.DB.GetAll()
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, movies)
+	return c.Render.JSON(w, http.StatusOK, movies)
 }
 
-func addMovie(c *echo.Context) error {
+func addMovie(c *context, w http.ResponseWriter, r *http.Request) error {
 	d := &struct {
 		Title string `valid:"required"`
 	}{}
-	if err := decode(c, d); err != nil {
+	if err := decode(r, d); err != nil {
 		return err
 	}
 
-	app := getApp(c)
-
-	movie, err := app.OMDB.Find(d.Title)
+	movie, err := c.OMDB.Find(d.Title)
 
 	if err != nil {
 		return err
 	}
 
-	oldMovie, err := app.DB.Get(movie.ImdbID)
+	oldMovie, err := c.DB.Get(movie.ImdbID)
 
 	if err == store.ErrMovieNotFound {
 
-		if err := app.DB.Save(movie); err != nil {
+		if err := c.DB.Save(movie); err != nil {
 			return err
 		}
 
-		return c.JSON(http.StatusCreated, movie)
+		return c.Render.JSON(w, http.StatusCreated, movie)
 	}
 
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, oldMovie)
+	return c.Render.JSON(w, http.StatusOK, oldMovie)
 
 }

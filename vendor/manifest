@@ -8,6 +8,30 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/codegangsta/negroni",
+			"repository": "https://github.com/codegangsta/negroni",
+			"revision": "c7477ad8e330bef55bf1ebe300cf8aa67c492d1b",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/gorilla/context",
+			"repository": "https://github.com/gorilla/context",
+			"revision": "1c83b3eabd45b6d76072b66b746c20815fb2872d",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/gorilla/mux",
+			"repository": "https://github.com/gorilla/mux",
+			"revision": "26a6070f849969ba72b72256e9f14cf519751690",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/gorilla/websocket",
+			"repository": "https://github.com/gorilla/websocket",
+			"revision": "4935ba31a2adbfcd9e08b86d2657659afbf1af9a",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/hoisie/web",
 			"repository": "https://github.com/hoisie/web",
 			"revision": "bb5992ad5e02a2b8bd2a69fae788781d4b1f80a9",
@@ -50,6 +74,12 @@
 			"repository": "https://github.com/mattn/go-isatty",
 			"revision": "56b76bdf51f7708750eac80fa38b952bb9f32639",
 			"branch": "master"
+		},
+		{
+			"importpath": "github.com/unrolled/render",
+			"repository": "https://github.com/unrolled/render",
+			"revision": "198ad4d8b8a4612176b804ca10555b222a086b40",
+			"branch": "v1"
 		},
 		{
 			"importpath": "github.com/zenazn/goji",
