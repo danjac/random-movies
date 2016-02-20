@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"server"
+	"handlers"
 	"store"
 )
 
@@ -28,7 +28,7 @@ func main() {
 		panic(err)
 	}
 
-	s := server.New(db, &server.Config{
+	app := handlers.New(db, &handlers.Config{
 		Env:          *env,
 		StaticURL:    staticURL,
 		StaticDir:    staticDir,
@@ -36,7 +36,7 @@ func main() {
 		Port:         6060,
 	})
 
-	if err := s.Run(); err != nil {
+	if err := app.Run(); err != nil {
 		panic(err)
 	}
 
