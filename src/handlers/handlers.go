@@ -38,6 +38,14 @@ func (r *renderer) Render(w io.Writer, name string, data interface{}) error {
 	return r.templates.ExecuteTemplate(w, name, data)
 }
 
+func newRenderer(path string) (echo.Renderer, error) {
+	templates, err := template.ParseGlob(path)
+	if err != nil {
+		return nil, err
+	}
+	return &renderer{templates}, nil
+}
+
 const socketWaitFor = 15 * time.Second
 
 // New returns new server implementation
@@ -95,13 +103,12 @@ func (app *App) Run() error {
 		}
 	})
 
-	// Render HTML
-
-	templates, err := template.ParseGlob(filepath.Join("./templates", "*.tmpl"))
+	renderer, err := newRenderer(filepath.Join("./templates", "*.tmpl"))
 	if err != nil {
 		return err
 	}
-	e.SetRenderer(&renderer{templates})
+
+	e.SetRenderer(renderer)
 
 	// static configuration
 	e.Static(app.Config.StaticURL, app.Config.StaticDir)
