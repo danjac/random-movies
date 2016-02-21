@@ -3,12 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"models"
 	"net/http"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/asaskevich/govalidator"
@@ -48,6 +45,7 @@ func New(db store.DB, options Options) *AppConfig {
 		Render: render.New(render.Options{
 			DisableHTTPErrorRendering: true,
 		}),
+		downloader: &imdbPosterDownloader{},
 	}
 }
 
@@ -62,10 +60,11 @@ type Options struct {
 
 // AppConfig is an instance of web app
 type AppConfig struct {
-	Options Options
-	OMDB    omdb.Finder
-	DB      store.DB
-	Render  *render.Render
+	Options    Options
+	OMDB       omdb.Finder
+	DB         store.DB
+	Render     *render.Render
+	downloader downloader
 }
 
 type handlerFunc func(*AppConfig, http.ResponseWriter, *http.Request) error
@@ -225,7 +224,8 @@ func addMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 
 		if movie.Poster != "" {
 			go func(movie *models.Movie) {
-				if filename, err := downloadPoster(c.Options.StaticDir, movie.Poster, movie.ImdbID); err != nil {
+				if filename, err := c.downloader.download(
+					c.Options.StaticDir, movie.Poster, movie.ImdbID); err != nil {
 					log.Println(err)
 					movie.Poster = ""
 				} else {
@@ -250,35 +250,4 @@ func addMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 
 	return c.Render.JSON(w, http.StatusOK, oldMovie)
 
-}
-
-func downloadPoster(staticDir, url, imdbID string) (string, error) {
-
-	if url == "" {
-		return "", nil
-	}
-
-	filename := fmt.Sprintf("%s.jpg", imdbID)
-
-	imageDir := filepath.Join(staticDir, "images")
-	if err := os.Mkdir(imageDir, 0777); err != nil && !os.IsExist(err) {
-		return filename, err
-	}
-
-	imagePath := filepath.Join(imageDir, filename)
-
-	client := &http.Client{}
-	resp, err := client.Get(url)
-	defer resp.Body.Close()
-
-	out, err := os.Create(imagePath)
-	if err != nil {
-		return filename, err
-	}
-
-	// should probably check this
-	defer out.Close()
-
-	_, err = io.Copy(out, resp.Body)
-	return filename, err
 }
