@@ -28,7 +28,7 @@ func main() {
 		panic(err)
 	}
 
-	app := handlers.New(db, &handlers.Config{
+	cfg := handlers.New(db, handlers.Options{
 		Env:          *env,
 		StaticURL:    staticURL,
 		StaticDir:    staticDir,
@@ -36,7 +36,7 @@ func main() {
 		Port:         6060,
 	})
 
-	if err := app.Run(); err != nil {
+	if err := cfg.Run(); err != nil {
 		panic(err)
 	}
 

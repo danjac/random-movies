@@ -34,24 +34,17 @@ func decode(r *http.Request, data interface{}) error {
 
 const socketWaitFor = 15 * time.Second
 
-// New returns new server implementation
-func New(db store.DB, config *Config) *App {
-	return &App{
-		DB:     db,
-		OMDB:   omdb.New(),
-		Config: config,
+// New returns new AppConfig implementation
+func New(db store.DB, options Options) *AppConfig {
+	return &AppConfig{
+		DB:      db,
+		OMDB:    omdb.New(),
+		Options: options,
 	}
 }
 
-// App is an instance of web app
-type App struct {
-	Config *Config
-	OMDB   omdb.Finder
-	DB     store.DB
-}
-
-// Config holds settings and env variables
-type Config struct {
+// Options holds settings and env variables
+type Options struct {
 	Env,
 	StaticURL,
 	StaticDir,
@@ -59,14 +52,17 @@ type Config struct {
 	Port int
 }
 
-type context struct {
-	*App
-	Render *render.Render
+// AppConfig is an instance of web app
+type AppConfig struct {
+	Options Options
+	OMDB    omdb.Finder
+	DB      store.DB
+	Render  *render.Render
 }
 
-type handlerFunc func(*context, http.ResponseWriter, *http.Request) error
+type handlerFunc func(*AppConfig, http.ResponseWriter, *http.Request) error
 
-func (c *context) handler(fn handlerFunc) http.Handler {
+func (c *AppConfig) handler(fn handlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := fn(c, w, r); err != nil {
 			if err == store.ErrMovieNotFound {
@@ -80,21 +76,19 @@ func (c *context) handler(fn handlerFunc) http.Handler {
 }
 
 // Run the server instance at given port
-func (app *App) Run() error {
+func (c *AppConfig) Run() error {
 
-	c := &context{
-		App: app,
-		Render: render.New(render.Options{
-			DisableHTTPErrorRendering: true,
-		}),
-	}
+	// disable error handling as we'll do it ourselves
+	c.Render = render.New(render.Options{
+		DisableHTTPErrorRendering: true,
+	})
 
 	router := mux.NewRouter()
 	//router.StrictSlash(true)
 
-	router.PathPrefix(app.Config.StaticURL).Handler(
-		http.StripPrefix(app.Config.StaticURL,
-			http.FileServer(http.Dir(app.Config.StaticDir))))
+	router.PathPrefix(c.Options.StaticURL).Handler(
+		http.StripPrefix(c.Options.StaticURL,
+			http.FileServer(http.Dir(c.Options.StaticDir))))
 
 	api := router.PathPrefix("/api").Subrouter()
 
@@ -110,36 +104,36 @@ func (app *App) Run() error {
 
 	n := negroni.Classic()
 	n.UseHandler(nosurf.New(router))
-	n.Run(fmt.Sprintf(":%v", app.Config.Port))
+	n.Run(fmt.Sprintf(":%v", c.Options.Port))
 	return nil
 }
 
-func indexPage(c *context, w http.ResponseWriter, r *http.Request) error {
+func indexPage(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 
 	var staticHost string
 
-	if c.Config.Env == "dev" {
-		staticHost = c.Config.DevServerURL
+	if c.Options.Env == "dev" {
+		staticHost = c.Options.DevServerURL
 	}
 
 	csrfToken := nosurf.Token(r)
 
 	data := map[string]string{
 		"staticHost": staticHost,
-		"env":        c.Config.Env,
+		"env":        c.Options.Env,
 		"csrfToken":  csrfToken,
 	}
 	return c.Render.HTML(w, http.StatusOK, "index", data)
 }
 
-func markSeen(c *context, w http.ResponseWriter, r *http.Request) error {
+func markSeen(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 	if err := c.DB.MarkSeen(mux.Vars(r)["id"]); err != nil {
 		return err
 	}
 	return c.Render.Text(w, http.StatusOK, "Movie seen")
 }
 
-func getRandomMovie(c *context, w http.ResponseWriter, r *http.Request) error {
+func getRandomMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 
 	movie, err := c.DB.GetRandom()
 
@@ -150,7 +144,7 @@ func getRandomMovie(c *context, w http.ResponseWriter, r *http.Request) error {
 	return c.Render.JSON(w, http.StatusOK, movie)
 }
 
-func suggest(c *context, w http.ResponseWriter, r *http.Request) error {
+func suggest(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -178,7 +172,7 @@ func suggest(c *context, w http.ResponseWriter, r *http.Request) error {
 
 }
 
-func getMovie(c *context, w http.ResponseWriter, r *http.Request) error {
+func getMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 	movie, err := c.DB.Get(mux.Vars(r)["id"])
 	if err != nil {
 		return err
@@ -186,7 +180,7 @@ func getMovie(c *context, w http.ResponseWriter, r *http.Request) error {
 	return c.Render.JSON(w, http.StatusOK, movie)
 }
 
-func deleteMovie(c *context, w http.ResponseWriter, r *http.Request) error {
+func deleteMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 	imdbID := mux.Vars(r)["id"]
 	if err := c.DB.Delete(imdbID); err != nil {
 		return err
@@ -194,7 +188,7 @@ func deleteMovie(c *context, w http.ResponseWriter, r *http.Request) error {
 	return c.Render.Text(w, http.StatusOK, "Movie deleted")
 }
 
-func getMovies(c *context, w http.ResponseWriter, r *http.Request) error {
+func getMovies(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 	movies, err := c.DB.GetAll()
 	if err != nil {
 		return err
@@ -202,7 +196,7 @@ func getMovies(c *context, w http.ResponseWriter, r *http.Request) error {
 	return c.Render.JSON(w, http.StatusOK, movies)
 }
 
-func addMovie(c *context, w http.ResponseWriter, r *http.Request) error {
+func addMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 	d := &struct {
 		Title string `valid:"required"`
 	}{}
