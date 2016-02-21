@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"models"
 	"net/http"
 	"time"
 
@@ -223,9 +222,9 @@ func addMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 	if err == store.ErrMovieNotFound {
 
 		if movie.Poster != "" {
-			go func(movie *models.Movie) {
+			go func(url, imdbID string) {
 				if filename, err := c.downloader.download(
-					c.Options.StaticDir, movie.Poster, movie.ImdbID); err != nil {
+					c.Options.StaticDir, url, imdbID); err != nil {
 					log.Println(err)
 					movie.Poster = ""
 				} else {
@@ -234,8 +233,10 @@ func addMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 				if err := c.DB.Save(movie); err != nil {
 					log.Println(err)
 				}
-			}(movie)
+			}(movie.Poster, movie.ImdbID)
 		}
+
+		movie.Poster = "" // so we don't get a bad link
 
 		if err := c.DB.Save(movie); err != nil {
 			return err
