@@ -11,27 +11,27 @@ import (
 	"github.com/unrolled/render"
 )
 
-type fakeDB struct {
+type fakeRepo struct {
 	movies []*models.Movie
 	movie  *models.Movie
 	err    error
 }
 
-func (db *fakeDB) GetAll() ([]*models.Movie, error) {
-	return db.movies, db.err
+func (r *fakeRepo) GetAll() ([]*models.Movie, error) {
+	return r.movies, r.err
 }
 
-func (db *fakeDB) GetRandom() (*models.Movie, error) {
-	return db.movie, db.err
+func (r *fakeRepo) GetRandom() (*models.Movie, error) {
+	return r.movie, r.err
 }
 
-func (db *fakeDB) Get(_ string) (*models.Movie, error) {
-	return db.movie, db.err
+func (r *fakeRepo) Get(_ string) (*models.Movie, error) {
+	return r.movie, r.err
 }
 
-func (db *fakeDB) Delete(_ string) error      { return db.err }
-func (db *fakeDB) MarkSeen(_ string) error    { return db.err }
-func (db *fakeDB) Save(_ *models.Movie) error { return db.err }
+func (r *fakeRepo) Delete(_ string) error      { return r.err }
+func (r *fakeRepo) MarkSeen(_ string) error    { return r.err }
+func (r *fakeRepo) Save(_ *models.Movie) error { return r.err }
 
 type fakeOMDB struct {
 	movie *models.Movie
@@ -47,7 +47,7 @@ func TestGetMovie(t *testing.T) {
 		Actors: "Matt Damon",
 	}
 	c := AppConfig{
-		DB:      &fakeDB{movie: movie},
+		Repo:    &fakeRepo{movie: movie},
 		Render:  render.New(),
 		Options: Options{},
 	}
@@ -67,7 +67,7 @@ func TestGetMovie(t *testing.T) {
 
 func TestGetMovieNotFound(t *testing.T) {
 	c := AppConfig{
-		DB:      &fakeDB{err: store.ErrMovieNotFound},
+		Repo:    &fakeRepo{err: store.ErrMovieNotFound},
 		Render:  render.New(),
 		Options: Options{},
 	}
@@ -91,7 +91,7 @@ func TestGetRandomMovie(t *testing.T) {
 		Actors: "Matt Damon",
 	}
 	c := AppConfig{
-		DB:      &fakeDB{movie: movie},
+		Repo:    &fakeRepo{movie: movie},
 		Render:  render.New(),
 		Options: Options{},
 	}

@@ -35,10 +35,10 @@ func decode(r *http.Request, data interface{}) error {
 const socketWaitFor = 15 * time.Second
 
 // New returns new AppConfig implementation
-func New(db store.DB, options Options) *AppConfig {
+func New(repo store.Repo, options Options) *AppConfig {
 
 	return &AppConfig{
-		DB:      db,
+		Repo:    repo,
 		OMDB:    omdb.New(),
 		Options: options,
 		Render: render.New(render.Options{
@@ -61,7 +61,7 @@ type Options struct {
 type AppConfig struct {
 	Options    Options
 	OMDB       omdb.Finder
-	DB         store.DB
+	Repo       store.Repo
 	Render     *render.Render
 	downloader downloader
 }
@@ -134,7 +134,7 @@ func indexPage(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 }
 
 func markSeen(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
-	if err := c.DB.MarkSeen(mux.Vars(r)["id"]); err != nil {
+	if err := c.Repo.MarkSeen(mux.Vars(r)["id"]); err != nil {
 		return err
 	}
 	return c.Render.Text(w, http.StatusOK, "Movie seen")
@@ -142,7 +142,7 @@ func markSeen(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 
 func getRandomMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 
-	movie, err := c.DB.GetRandom()
+	movie, err := c.Repo.GetRandom()
 
 	if err != nil {
 		return err
@@ -162,7 +162,7 @@ func suggest(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 
 		for {
 
-			movie, err := c.DB.GetRandom()
+			movie, err := c.Repo.GetRandom()
 
 			if err != nil {
 				continue
@@ -180,7 +180,7 @@ func suggest(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 }
 
 func getMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
-	movie, err := c.DB.Get(mux.Vars(r)["id"])
+	movie, err := c.Repo.Get(mux.Vars(r)["id"])
 	if err != nil {
 		return err
 	}
@@ -189,14 +189,14 @@ func getMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 
 func deleteMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 	imdbID := mux.Vars(r)["id"]
-	if err := c.DB.Delete(imdbID); err != nil {
+	if err := c.Repo.Delete(imdbID); err != nil {
 		return err
 	}
 	return c.Render.Text(w, http.StatusOK, "Movie deleted")
 }
 
 func getMovies(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
-	movies, err := c.DB.GetAll()
+	movies, err := c.Repo.GetAll()
 	if err != nil {
 		return err
 	}
@@ -217,7 +217,7 @@ func addMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	oldMovie, err := c.DB.Get(movie.ImdbID)
+	oldMovie, err := c.Repo.Get(movie.ImdbID)
 
 	if err == store.ErrMovieNotFound {
 
@@ -230,7 +230,7 @@ func addMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 				} else {
 					movie.Poster = filename
 				}
-				if err := c.DB.Save(movie); err != nil {
+				if err := c.Repo.Save(movie); err != nil {
 					log.Println(err)
 				}
 			}(movie.Poster, movie.ImdbID)
@@ -238,7 +238,7 @@ func addMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 
 		movie.Poster = "" // so we don't get a bad link
 
-		if err := c.DB.Save(movie); err != nil {
+		if err := c.Repo.Save(movie); err != nil {
 			return err
 		}
 

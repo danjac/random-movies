@@ -22,13 +22,12 @@ func main() {
 
 	flag.Parse()
 
-	db, err := store.New(store.DefaultConfig())
+	repo, err := store.New(store.DefaultConfig())
 
 	if err != nil {
 		panic(err)
 	}
-
-	cfg := handlers.New(db, handlers.Options{
+	appCfg := handlers.New(repo, handlers.Options{
 		Env:          *env,
 		StaticURL:    staticURL,
 		StaticDir:    staticDir,
@@ -36,7 +35,7 @@ func main() {
 		Port:         6060,
 	})
 
-	if err := cfg.Run(); err != nil {
+	if err := appCfg.Run(); err != nil {
 		panic(err)
 	}
 
