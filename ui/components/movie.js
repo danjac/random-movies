@@ -7,7 +7,6 @@ import {
   ButtonGroup,
   Glyphicon,
   Badge,
-  Grid,
   Row,
   Col,
 } from 'react-bootstrap';
@@ -117,7 +116,11 @@ export class MovieDetail extends React.Component {
           <Col md={3}>
             {movie.Poster === 'N/A' ?
             'No poster available' :
-            <img className="img-responsive" src={movie.Poster} alt={movie.Title} />}
+            <img
+              className="img-responsive"
+              src={`/static/images/${movie.Poster}`}
+              alt={movie.Title}
+            />}
           </Col>
           <Col md={9}>
             <Stars movie={movie} />

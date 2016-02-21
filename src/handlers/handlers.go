@@ -3,14 +3,18 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
+	"models"
 	"net/http"
-	"store"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/labstack/gommon/log"
 
 	"omdb"
+	"store"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
@@ -36,10 +40,14 @@ const socketWaitFor = 15 * time.Second
 
 // New returns new AppConfig implementation
 func New(db store.DB, options Options) *AppConfig {
+
 	return &AppConfig{
 		DB:      db,
 		OMDB:    omdb.New(),
 		Options: options,
+		Render: render.New(render.Options{
+			DisableHTTPErrorRendering: true,
+		}),
 	}
 }
 
@@ -69,19 +77,14 @@ func (c *AppConfig) handler(fn handlerFunc) http.Handler {
 				http.NotFound(w, r)
 				return
 			}
-			log.Error(err)
+			log.Println(err)
 			http.Error(w, "An error has occurred", http.StatusInternalServerError)
 		}
 	})
 }
 
-// Run the server instance at given port
-func (c *AppConfig) Run() error {
-
-	// disable error handling as we'll do it ourselves
-	c.Render = render.New(render.Options{
-		DisableHTTPErrorRendering: true,
-	})
+// Router creates http handler
+func (c *AppConfig) Router() http.Handler {
 
 	router := mux.NewRouter()
 	//router.StrictSlash(true)
@@ -102,8 +105,14 @@ func (c *AppConfig) Run() error {
 
 	router.Handle("/{path:.*}", c.handler(indexPage)).Methods("GET")
 
+	return router
+
+}
+
+// Run the server instance at given port
+func (c *AppConfig) Run() error {
 	n := negroni.Classic()
-	n.UseHandler(nosurf.New(router))
+	n.UseHandler(nosurf.New(c.Router()))
 	n.Run(fmt.Sprintf(":%v", c.Options.Port))
 	return nil
 }
@@ -214,6 +223,20 @@ func addMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 
 	if err == store.ErrMovieNotFound {
 
+		if movie.Poster != "" {
+			go func(movie *models.Movie) {
+				if filename, err := downloadPoster(c.Options.StaticDir, movie.Poster, movie.ImdbID); err != nil {
+					log.Println(err)
+					movie.Poster = ""
+				} else {
+					movie.Poster = filename
+				}
+				if err := c.DB.Save(movie); err != nil {
+					log.Println(err)
+				}
+			}(movie)
+		}
+
 		if err := c.DB.Save(movie); err != nil {
 			return err
 		}
@@ -227,4 +250,35 @@ func addMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 
 	return c.Render.JSON(w, http.StatusOK, oldMovie)
 
+}
+
+func downloadPoster(staticDir, url, imdbID string) (string, error) {
+
+	if url == "" {
+		return "", nil
+	}
+
+	filename := fmt.Sprintf("%s.jpg", imdbID)
+
+	imageDir := filepath.Join(staticDir, "images")
+	if err := os.Mkdir(imageDir, 0777); err != nil && !os.IsExist(err) {
+		return filename, err
+	}
+
+	imagePath := filepath.Join(imageDir, filename)
+
+	client := &http.Client{}
+	resp, err := client.Get(url)
+	defer resp.Body.Close()
+
+	out, err := os.Create(imagePath)
+	if err != nil {
+		return filename, err
+	}
+
+	// should probably check this
+	defer out.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	return filename, err
 }
