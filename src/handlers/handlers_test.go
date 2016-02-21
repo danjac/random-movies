@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"models"
 	"net/http"
 	"net/http/httptest"
@@ -11,48 +10,55 @@ import (
 	"github.com/unrolled/render"
 )
 
-type fakeRepo struct {
-	movies []*models.Movie
-	movie  *models.Movie
-	err    error
+type mockStore struct {
+	mockGetAll    func() ([]*models.Movie, error)
+	mockGet       func() (*models.Movie, error)
+	mockGetRandom func() (*models.Movie, error)
+	mockDelete    func() error
+	mockMarkSeen  func() error
+	mockSave      func() error
 }
 
-func (r *fakeRepo) GetAll() ([]*models.Movie, error) {
-	return r.movies, r.err
+func (s *mockStore) GetAll() ([]*models.Movie, error) {
+	return s.mockGetAll()
 }
 
-func (r *fakeRepo) GetRandom() (*models.Movie, error) {
-	return r.movie, r.err
+func (s *mockStore) GetRandom() (*models.Movie, error) {
+	return s.mockGetRandom()
 }
 
-func (r *fakeRepo) Get(_ string) (*models.Movie, error) {
-	return r.movie, r.err
+func (s *mockStore) Get(_ string) (*models.Movie, error) {
+	return s.mockGet()
 }
 
-func (r *fakeRepo) Delete(_ string) error      { return r.err }
-func (r *fakeRepo) MarkSeen(_ string) error    { return r.err }
-func (r *fakeRepo) Save(_ *models.Movie) error { return r.err }
+func (s *mockStore) Delete(_ string) error      { return s.mockDelete() }
+func (s *mockStore) MarkSeen(_ string) error    { return s.mockMarkSeen() }
+func (s *mockStore) Save(_ *models.Movie) error { return s.mockSave() }
 
-type fakeOMDB struct {
-	movie *models.Movie
-	err   error
+type mockOMDB struct {
+	mockFind func() (*models.Movie, error)
 }
 
-func (o *fakeOMDB) Find(_ string) (*models.Movie, error) { return o.movie, o.err }
+func (o *mockOMDB) Find(_ string) (*models.Movie, error) { return o.mockFind() }
 
 func TestGetMovie(t *testing.T) {
-	movie := &models.Movie{
-		ImdbID: "tt090909090",
-		Title:  "The Martian",
-		Actors: "Matt Damon",
+
+	s := &mockStore{}
+	s.mockGet = func() (*models.Movie, error) {
+		return &models.Movie{
+			ImdbID: "tt090909090",
+			Title:  "The Martian",
+			Actors: "Matt Damon",
+		}, nil
 	}
+
 	c := AppConfig{
-		Repo:    &fakeRepo{movie: movie},
+		Store:   s,
 		Render:  render.New(),
 		Options: Options{},
 	}
 	router := c.Router()
-	r, err := http.NewRequest("GET", fmt.Sprintf("/api/movie/%s", movie.ImdbID), nil)
+	r, err := http.NewRequest("GET", "/api/movie/tt090909090", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,8 +72,14 @@ func TestGetMovie(t *testing.T) {
 }
 
 func TestGetMovieNotFound(t *testing.T) {
+
+	s := &mockStore{}
+	s.mockGet = func() (*models.Movie, error) {
+		return nil, store.ErrMovieNotFound
+	}
+
 	c := AppConfig{
-		Repo:    &fakeRepo{err: store.ErrMovieNotFound},
+		Store:   s,
 		Render:  render.New(),
 		Options: Options{},
 	}
@@ -85,13 +97,17 @@ func TestGetMovieNotFound(t *testing.T) {
 }
 
 func TestGetRandomMovie(t *testing.T) {
-	movie := &models.Movie{
-		ImdbID: "tt090909090",
-		Title:  "The Martian",
-		Actors: "Matt Damon",
+
+	s := &mockStore{}
+	s.mockGetRandom = func() (*models.Movie, error) {
+		return &models.Movie{
+			ImdbID: "tt090909090",
+			Title:  "The Martian",
+			Actors: "Matt Damon",
+		}, nil
 	}
 	c := AppConfig{
-		Repo:    &fakeRepo{movie: movie},
+		Store:   s,
 		Render:  render.New(),
 		Options: Options{},
 	}

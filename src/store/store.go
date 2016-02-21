@@ -10,8 +10,8 @@ import (
 // ErrMovieNotFound is returned if no movie found
 var ErrMovieNotFound = errors.New("Movie not found")
 
-// Repo is a data store following the repository pattern
-type Repo interface {
+// Store is a data store following the repository pattern
+type Store interface {
 	GetAll() ([]*models.Movie, error)
 	GetRandom() (*models.Movie, error)
 	Get(string) (*models.Movie, error)
@@ -36,12 +36,12 @@ func DefaultConfig() *Config {
 	}
 }
 
-type defaultRepo struct {
+type defaultStore struct {
 	*redis.Client
 }
 
 // New returns a new database instance
-func New(config *Config) (Repo, error) {
+func New(config *Config) (Store, error) {
 	db := redis.NewClient(&redis.Options{
 		Addr:     config.URL,
 		Password: config.Password,
@@ -52,40 +52,40 @@ func New(config *Config) (Repo, error) {
 		return nil, err
 	}
 
-	return &defaultRepo{db}, nil
+	return &defaultStore{db}, nil
 }
 
-func (r *defaultRepo) Delete(imdbID string) error {
-	return r.Del(imdbID).Err()
+func (s *defaultStore) Delete(imdbID string) error {
+	return s.Del(imdbID).Err()
 }
 
-func (r *defaultRepo) MarkSeen(imdbID string) error {
-	movie, err := r.Get(imdbID)
+func (s *defaultStore) MarkSeen(imdbID string) error {
+	movie, err := s.Get(imdbID)
 	if err != nil {
 		return err
 	}
 	movie.Seen = true
-	return r.Save(movie)
+	return s.Save(movie)
 }
 
-func (r *defaultRepo) Save(movie *models.Movie) error {
-	return r.Set(movie.ImdbID, movie, 0).Err()
+func (s *defaultStore) Save(movie *models.Movie) error {
+	return s.Set(movie.ImdbID, movie, 0).Err()
 }
 
-func (r *defaultRepo) GetRandom() (*models.Movie, error) {
-	imdbID, err := r.RandomKey().Result()
+func (s *defaultStore) GetRandom() (*models.Movie, error) {
+	imdbID, err := s.RandomKey().Result()
 	if err == redis.Nil {
 		return nil, ErrMovieNotFound
 	}
 	if err != nil {
 		return nil, err
 	}
-	return r.Get(imdbID)
+	return s.Get(imdbID)
 }
 
-func (r *defaultRepo) Get(imdbID string) (*models.Movie, error) {
+func (s *defaultStore) Get(imdbID string) (*models.Movie, error) {
 	movie := &models.Movie{}
-	if err := r.Client.Get(imdbID).Scan(movie); err != nil {
+	if err := s.Client.Get(imdbID).Scan(movie); err != nil {
 		if err == redis.Nil {
 			return nil, ErrMovieNotFound
 		}
@@ -94,15 +94,15 @@ func (r *defaultRepo) Get(imdbID string) (*models.Movie, error) {
 	return movie, nil
 }
 
-func (r *defaultRepo) GetAll() ([]*models.Movie, error) {
-	result := r.Keys("*")
+func (s *defaultStore) GetAll() ([]*models.Movie, error) {
+	result := s.Keys("*")
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
 	var movies []*models.Movie
 	for _, imdbID := range result.Val() {
 		movie := &models.Movie{}
-		if err := r.Client.Get(imdbID).Scan(movie); err == nil {
+		if err := s.Client.Get(imdbID).Scan(movie); err == nil {
 			movies = append(movies, movie)
 		}
 	}
