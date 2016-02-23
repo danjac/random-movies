@@ -16,6 +16,9 @@ import (
 
 	"goji.io"
 
+	"github.com/Sirupsen/logrus"
+	logrusmw "github.com/meatballhat/negroni-logrus"
+
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/websocket"
 	"github.com/justinas/nosurf"
@@ -43,11 +46,15 @@ const socketWaitFor = 15 * time.Second
 // New returns new Application implementation
 func New(Store store.Store, options Options) *Application {
 
+	logger := logrus.New()
+	logger.Level = logrus.InfoLevel
+
 	return &Application{
 		Store:      Store,
 		OMDB:       omdb.New(),
 		Options:    options,
 		Render:     render.New(),
+		Logger:     logger,
 		downloader: &imdbPosterDownloader{},
 	}
 }
@@ -67,6 +74,7 @@ type Application struct {
 	OMDB       omdb.Finder
 	Store      store.Store
 	Render     *render.Render
+	Logger     *logrus.Logger
 	downloader downloader
 }
 
@@ -88,8 +96,7 @@ func (c *RequestContext) handleErrors(w http.ResponseWriter, r *http.Request) {
 		// validation fail
 		c.Render.JSON(w, http.StatusBadRequest, verrors)
 	} else {
-		// we'd probably use something like logrus in production
-		log.Println(c.Err)
+		c.Logger.Error(c.Err)
 		http.Error(w, "An error has occurred", http.StatusInternalServerError)
 	}
 
@@ -147,7 +154,9 @@ func (app *Application) Router() http.Handler {
 
 // Run the server instance at given port
 func (app *Application) Run() error {
-	n := negroni.Classic()
+	n := negroni.New()
+	n.Use(negroni.NewRecovery())
+	n.Use(logrusmw.NewMiddlewareFromLogger(app.Logger, "web"))
 	n.UseHandler(nosurf.New(app.Router()))
 	n.Run(fmt.Sprintf(":%v", app.Options.Port))
 	return nil
@@ -283,13 +292,13 @@ func addMovie(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 			go func(url, imdbID string) {
 				if filename, err := c.downloader.download(
 					c.Options.StaticDir, url, imdbID); err != nil {
-					log.Println(err)
+					c.Logger.Error(err)
 					movie.Poster = ""
 				} else {
 					movie.Poster = filename
 				}
 				if err := c.Store.Save(movie); err != nil {
-					log.Println(err)
+					c.Logger.Error(err)
 				}
 			}(movie.Poster, movie.ImdbID)
 		}
