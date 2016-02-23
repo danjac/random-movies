@@ -20,12 +20,6 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "github.com/gorilla/mux",
-			"repository": "https://github.com/gorilla/mux",
-			"revision": "26a6070f849969ba72b72256e9f14cf519751690",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/gorilla/websocket",
 			"repository": "https://github.com/gorilla/websocket",
 			"revision": "4935ba31a2adbfcd9e08b86d2657659afbf1af9a",
@@ -85,6 +79,12 @@
 			"importpath": "github.com/zenazn/goji",
 			"repository": "https://github.com/zenazn/goji",
 			"revision": "859bfa93a8db583de1dd72a1edcbf4bb75c0dbbe",
+			"branch": "master"
+		},
+		{
+			"importpath": "goji.io",
+			"repository": "https://github.com/goji/goji",
+			"revision": "e1741450ad80d2837134e32ac7b1d0a7a2b11c51",
 			"branch": "master"
 		},
 		{

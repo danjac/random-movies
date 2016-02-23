@@ -7,17 +7,23 @@ import (
 	"net/http"
 	"time"
 
+	"goji.io/pat"
+
 	"github.com/asaskevich/govalidator"
 
 	"omdb"
 	"store"
 
+	"goji.io"
+
 	"github.com/codegangsta/negroni"
-	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/justinas/nosurf"
 	"github.com/unrolled/render"
+	"golang.org/x/net/context"
 )
+
+const requestContextKey = "reqctx"
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -34,16 +40,14 @@ func decode(r *http.Request, data interface{}) error {
 
 const socketWaitFor = 15 * time.Second
 
-// New returns new AppConfig implementation
-func New(Store store.Store, options Options) *AppConfig {
+// New returns new Application implementation
+func New(Store store.Store, options Options) *Application {
 
-	return &AppConfig{
-		Store:   Store,
-		OMDB:    omdb.New(),
-		Options: options,
-		Render: render.New(render.Options{
-			DisableHTTPErrorRendering: true,
-		}),
+	return &Application{
+		Store:      Store,
+		OMDB:       omdb.New(),
+		Options:    options,
+		Render:     render.New(),
 		downloader: &imdbPosterDownloader{},
 	}
 }
@@ -57,8 +61,8 @@ type Options struct {
 	Port int
 }
 
-// AppConfig is an instance of web app
-type AppConfig struct {
+// Application is an instance of web app
+type Application struct {
 	Options    Options
 	OMDB       omdb.Finder
 	Store      store.Store
@@ -66,56 +70,82 @@ type AppConfig struct {
 	downloader downloader
 }
 
-type handlerFunc func(*AppConfig, http.ResponseWriter, *http.Request) error
+// RequestContext wraps Application and provides extra per-request info
+// In a larger app we'd keep user identity etc here
+type RequestContext struct {
+	*Application
+	Err error
+}
 
-func (c *AppConfig) handler(fn handlerFunc) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := fn(c, w, r); err != nil {
-			if err == store.ErrMovieNotFound {
-				http.NotFound(w, r)
-				return
-			}
-			log.Println(err)
-			http.Error(w, "An error has occurred", http.StatusInternalServerError)
-		}
-	})
+func getRequestContext(ctx context.Context) *RequestContext {
+	return ctx.Value(requestContextKey).(*RequestContext)
+}
+
+// NewRequestContext creates a new request context
+func (app *Application) NewRequestContext(ctx context.Context) (context.Context, *RequestContext) {
+	reqctx := &RequestContext{Application: app}
+	ctx = context.WithValue(ctx, requestContextKey, reqctx)
+	return ctx, reqctx
 }
 
 // Router creates http handler
-func (c *AppConfig) Router() http.Handler {
+func (app *Application) Router() http.Handler {
 
-	router := mux.NewRouter()
-	//router.StrictSlash(true)
+	router := goji.NewMux()
 
-	router.PathPrefix(c.Options.StaticURL).Handler(
-		http.StripPrefix(c.Options.StaticURL,
-			http.FileServer(http.Dir(c.Options.StaticDir))))
+	router.Handle(
+		pat.Get(app.Options.StaticURL+"*"),
+		http.StripPrefix(app.Options.StaticURL,
+			http.FileServer(http.Dir(app.Options.StaticDir))))
 
-	api := router.PathPrefix("/api").Subrouter()
+	api := goji.SubMux()
 
-	api.Handle("/", c.handler(getRandomMovie)).Methods("GET")
-	api.Handle("/", c.handler(addMovie)).Methods("POST")
-	api.Handle("/suggest", c.handler(suggest)).Methods("GET")
-	api.Handle("/movie/{id}", c.handler(getMovie)).Methods("GET")
-	api.Handle("/movie/{id}", c.handler(deleteMovie)).Methods("DELETE")
-	api.Handle("/seen/{id}", c.handler(markSeen)).Methods("PATCH")
-	api.Handle("/all/", c.handler(getMovies)).Methods("GET")
+	api.HandleFuncC(pat.Get("/all/"), getMovies)
+	api.HandleFuncC(pat.Get("/"), getRandomMovie)
+	api.HandleFuncC(pat.Post("/"), addMovie)
+	api.HandleFuncC(pat.Get("/suggest"), suggest)
+	api.HandleFuncC(pat.Get("/movie/:id"), getMovie)
+	api.HandleFuncC(pat.Delete("/movie/:id"), deleteMovie)
+	api.HandleFuncC(pat.Patch("/seen/:id"), markSeen)
 
-	router.Handle("/{path:.*}", c.handler(indexPage)).Methods("GET")
+	router.HandleC(pat.New("/api/*"), api)
+
+	router.HandleFuncC(pat.Get("/*"), indexPage)
+
+	// inject Application
+	router.UseC(func(h goji.Handler) goji.Handler {
+		return goji.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+			// append request context
+			ctx, reqctx := app.NewRequestContext(ctx)
+			h.ServeHTTPC(ctx, w, r)
+			if reqctx.Err != nil {
+				if reqctx.Err == store.ErrMovieNotFound {
+					http.NotFound(w, r)
+				} else {
+					log.Println(reqctx.Err)
+					http.Error(w, "An error has occurred", http.StatusInternalServerError)
+				}
+			}
+
+			// check for errors here
+		})
+	})
 
 	return router
 
 }
 
 // Run the server instance at given port
-func (c *AppConfig) Run() error {
+func (app *Application) Run() error {
 	n := negroni.Classic()
-	n.UseHandler(nosurf.New(c.Router()))
-	n.Run(fmt.Sprintf(":%v", c.Options.Port))
+	n.UseHandler(nosurf.New(app.Router()))
+	n.Run(fmt.Sprintf(":%v", app.Options.Port))
 	return nil
 }
 
-func indexPage(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
+func indexPage(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+
+	c := getRequestContext(ctx)
 
 	var staticHost string
 
@@ -130,32 +160,53 @@ func indexPage(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 		"env":        c.Options.Env,
 		"csrfToken":  csrfToken,
 	}
-	return c.Render.HTML(w, http.StatusOK, "index", data)
+	log.Println("indexpage", c.Options)
+	c.Render.HTML(w, http.StatusOK, "index", data)
 }
 
-func markSeen(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
-	if err := c.Store.MarkSeen(mux.Vars(r)["id"]); err != nil {
-		return err
+func getMovies(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	c := getRequestContext(ctx)
+	movies, err := c.Store.GetAll()
+	if err != nil {
+		c.Err = err
+		return
 	}
-	return c.Render.Text(w, http.StatusOK, "Movie seen")
+	c.Render.JSON(w, http.StatusOK, movies)
 }
 
-func getRandomMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
+func markSeen(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+
+	c := getRequestContext(ctx)
+
+	if err := c.Store.MarkSeen(pat.Param(ctx, "id")); err != nil {
+		c.Err = err
+		return
+	}
+	c.Render.Text(w, http.StatusOK, "Movie seen")
+}
+
+func getRandomMovie(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+
+	c := getRequestContext(ctx)
 
 	movie, err := c.Store.GetRandom()
 
 	if err != nil {
-		return err
+		c.Err = err
+		return
 	}
 
-	return c.Render.JSON(w, http.StatusOK, movie)
+	c.Render.JSON(w, http.StatusOK, movie)
 }
 
-func suggest(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
+func suggest(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+
+	c := getRequestContext(ctx)
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		return err
+		c.Err = err
+		return
 	}
 
 	for {
@@ -169,52 +220,52 @@ func suggest(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 			}
 
 			if err := conn.WriteJSON(movie); err != nil {
-				return err
+				c.Err = err
+				return
 			}
 
 			time.Sleep(socketWaitFor)
 		}
 	}
-	return nil
 
 }
 
-func getMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
-	movie, err := c.Store.Get(mux.Vars(r)["id"])
+func getMovie(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	c := getRequestContext(ctx)
+	movie, err := c.Store.Get(pat.Param(ctx, "id"))
 	if err != nil {
-		return err
+		c.Err = err
+		return
 	}
-	return c.Render.JSON(w, http.StatusOK, movie)
+	c.Render.JSON(w, http.StatusOK, movie)
 }
 
-func deleteMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
-	imdbID := mux.Vars(r)["id"]
-	if err := c.Store.Delete(imdbID); err != nil {
-		return err
+func deleteMovie(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	c := getRequestContext(ctx)
+	if err := c.Store.Delete(pat.Param(ctx, "id")); err != nil {
+		c.Err = err
+		return
 	}
-	return c.Render.Text(w, http.StatusOK, "Movie deleted")
+	c.Render.Text(w, http.StatusOK, "Movie deleted")
 }
 
-func getMovies(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
-	movies, err := c.Store.GetAll()
-	if err != nil {
-		return err
-	}
-	return c.Render.JSON(w, http.StatusOK, movies)
-}
+func addMovie(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 
-func addMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
+	c := getRequestContext(ctx)
+
 	d := &struct {
 		Title string `valid:"required"`
 	}{}
 	if err := decode(r, d); err != nil {
-		return err
+		c.Err = err
+		return
 	}
 
 	movie, err := c.OMDB.Find(d.Title)
 
 	if err != nil {
-		return err
+		c.Err = err
+		return
 	}
 
 	oldMovie, err := c.Store.Get(movie.ImdbID)
@@ -239,16 +290,19 @@ func addMovie(c *AppConfig, w http.ResponseWriter, r *http.Request) error {
 		movie.Poster = "" // so we don't get a bad link
 
 		if err := c.Store.Save(movie); err != nil {
-			return err
+			c.Err = err
+			return
 		}
 
-		return c.Render.JSON(w, http.StatusCreated, movie)
+		c.Render.JSON(w, http.StatusCreated, movie)
+		return
 	}
 
 	if err != nil {
-		return err
+		c.Err = err
+		return
 	}
 
-	return c.Render.JSON(w, http.StatusOK, oldMovie)
+	c.Render.JSON(w, http.StatusOK, oldMovie)
 
 }

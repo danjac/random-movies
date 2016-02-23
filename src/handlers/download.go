@@ -31,6 +31,9 @@ func (d *imdbPosterDownloader) download(staticDir, url, imdbID string) (string, 
 
 	client := &http.Client{}
 	resp, err := client.Get(url)
+	if err != nil {
+		return filename, err
+	}
 	defer resp.Body.Close()
 
 	out, err := os.Create(imagePath)
