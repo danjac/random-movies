@@ -233,6 +233,7 @@ func suggest(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		movie, err := c.Store.GetRandom()
 
 		if err != nil {
+			c.Logger.Error(err)
 			continue
 		}
 
