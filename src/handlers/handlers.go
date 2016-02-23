@@ -211,21 +211,18 @@ func suggest(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 
 	for {
 
-		for {
+		movie, err := c.Store.GetRandom()
 
-			movie, err := c.Store.GetRandom()
-
-			if err != nil {
-				continue
-			}
-
-			if err := conn.WriteJSON(movie); err != nil {
-				c.Err = err
-				return
-			}
-
-			time.Sleep(socketWaitFor)
+		if err != nil {
+			continue
 		}
+
+		if err := conn.WriteJSON(movie); err != nil {
+			c.Err = err
+			return
+		}
+
+		time.Sleep(socketWaitFor)
 	}
 
 }
