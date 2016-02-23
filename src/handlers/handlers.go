@@ -77,6 +77,24 @@ type RequestContext struct {
 	Err error
 }
 
+// checks for any errors and handles them appropriately.
+func (c *RequestContext) handleErrors(w http.ResponseWriter, r *http.Request) {
+	if c.Err == nil {
+		return
+	}
+	if c.Err == store.ErrMovieNotFound {
+		http.NotFound(w, r)
+	} else if verrors, ok := c.Err.(govalidator.Errors); ok {
+		// validation fail
+		c.Render.JSON(w, http.StatusBadRequest, verrors)
+	} else {
+		// we'd probably use something like logrus in production
+		log.Println(c.Err)
+		http.Error(w, "An error has occurred", http.StatusInternalServerError)
+	}
+
+}
+
 func getRequestContext(ctx context.Context) *RequestContext {
 	return ctx.Value(requestContextKey).(*RequestContext)
 }
@@ -93,6 +111,7 @@ func (app *Application) Router() http.Handler {
 
 	router := goji.NewMux()
 
+	// static paths
 	router.Handle(
 		pat.Get(app.Options.StaticURL+"*"),
 		http.StripPrefix(app.Options.StaticURL,
@@ -118,16 +137,7 @@ func (app *Application) Router() http.Handler {
 			// append request context
 			ctx, reqctx := app.NewRequestContext(ctx)
 			h.ServeHTTPC(ctx, w, r)
-			if reqctx.Err != nil {
-				if reqctx.Err == store.ErrMovieNotFound {
-					http.NotFound(w, r)
-				} else {
-					log.Println(reqctx.Err)
-					http.Error(w, "An error has occurred", http.StatusInternalServerError)
-				}
-			}
-
-			// check for errors here
+			reqctx.handleErrors(w, r)
 		})
 	})
 
