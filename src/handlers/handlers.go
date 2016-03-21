@@ -203,7 +203,7 @@ func addMovie(c *gin.Context) {
 	cfg := getConfig(c)
 
 	d := &struct {
-		Title string `valid:"required"`
+		Title string `binding:"required"`
 	}{}
 	if err := c.Bind(d); err != nil {
 		return
