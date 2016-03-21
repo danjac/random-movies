@@ -8,22 +8,23 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "github.com/asaskevich/govalidator",
-			"repository": "https://github.com/asaskevich/govalidator",
-			"revision": "9699ab6b38bee2e02cd3fe8b99ecf67665395c96",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/codegangsta/negroni",
 			"repository": "https://github.com/codegangsta/negroni",
 			"revision": "c7477ad8e330bef55bf1ebe300cf8aa67c492d1b",
 			"branch": "master"
 		},
 		{
-			"importpath": "github.com/gorilla/context",
-			"repository": "https://github.com/gorilla/context",
-			"revision": "1c83b3eabd45b6d76072b66b746c20815fb2872d",
-			"branch": "master"
+			"importpath": "github.com/gin-gonic/gin",
+			"repository": "https://github.com/gin-gonic/gin",
+			"revision": "4a6bc4aac4607e253bcda67c8c5bcda693d2388e",
+			"branch": "develop"
+		},
+		{
+			"importpath": "github.com/golang/protobuf/proto",
+			"repository": "https://github.com/golang/protobuf",
+			"revision": "d120e2f9573fd13ef964982b1d1f118cee00e4d0",
+			"branch": "master",
+			"path": "/proto"
 		},
 		{
 			"importpath": "github.com/gorilla/websocket",
@@ -64,6 +65,12 @@
 			"path": "/log"
 		},
 		{
+			"importpath": "github.com/manucorporat/sse",
+			"repository": "https://github.com/manucorporat/sse",
+			"revision": "ee05b128a739a0fb76c7ebd3ae4810c1de808d6d",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/mattn/go-colorable",
 			"repository": "https://github.com/mattn/go-colorable",
 			"revision": "9fdad7c47650b7d2e1da50644c1f4ba7f172f252",
@@ -79,6 +86,12 @@
 			"importpath": "github.com/meatballhat/negroni-logrus",
 			"repository": "https://github.com/meatballhat/negroni-logrus",
 			"revision": "0456e765fdc169ebcb064ac33ed462b632bfc41f",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/turtlemonvh/gin-wraphh",
+			"repository": "https://github.com/turtlemonvh/gin-wraphh",
+			"revision": "ea8e4927b3a647531d381ef91c3a81acc1aa2377",
 			"branch": "master"
 		},
 		{
@@ -125,6 +138,12 @@
 			"repository": "https://gopkg.in/bsm/ratelimit.v1",
 			"revision": "f14ad9c78b155f69b480cfa41cb655259baac260",
 			"branch": "v1"
+		},
+		{
+			"importpath": "gopkg.in/go-playground/validator.v8",
+			"repository": "https://gopkg.in/go-playground/validator.v8",
+			"revision": "014792cf3e266caff1e916876be12282b33059e0",
+			"branch": "master"
 		},
 		{
 			"importpath": "gopkg.in/redis.v3",

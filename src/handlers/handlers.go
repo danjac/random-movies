@@ -1,61 +1,41 @@
 package handlers
 
 import (
-	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 	"time"
-
-	"goji.io/pat"
-
-	"github.com/asaskevich/govalidator"
 
 	"omdb"
 	"store"
 
-	"goji.io"
+	"github.com/gin-gonic/gin"
 
-	"github.com/Sirupsen/logrus"
-	logrusmw "github.com/meatballhat/negroni-logrus"
-
-	"github.com/codegangsta/negroni"
 	"github.com/gorilla/websocket"
 	"github.com/justinas/nosurf"
-	"github.com/unrolled/render"
-	"golang.org/x/net/context"
+	"github.com/turtlemonvh/gin-wraphh"
 )
-
-const requestContextKey = "reqctx"
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
 
-func decode(r *http.Request, data interface{}) error {
-	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
-		return err
-	}
-	_, err := govalidator.ValidateStruct(data)
-	return err
-}
-
 const socketWaitFor = 15 * time.Second
+
+func getConfig(c *gin.Context) *Config {
+	cfg, _ := c.Get("cfg")
+	return cfg.(*Config)
+}
 
 // New returns new Application implementation
 func New(Store store.Store, options Options) *Application {
 
-	logger := logrus.New()
-	logger.Level = logrus.InfoLevel
-
 	return &Application{
-		Store:      Store,
-		OMDB:       omdb.New(),
-		Options:    options,
-		Render:     render.New(),
-		Logger:     logger,
-		downloader: &imdbPosterDownloader{},
+		Config: &Config{
+			Store:      Store,
+			OMDB:       omdb.New(),
+			Options:    options,
+			Downloader: &imdbPosterDownloader{},
+		},
 	}
 }
 
@@ -68,177 +48,129 @@ type Options struct {
 	Port int
 }
 
-// Application is an instance of web app
-type Application struct {
+// Config holds all configuration objects
+type Config struct {
 	Options    Options
 	OMDB       omdb.Finder
 	Store      store.Store
-	Render     *render.Render
-	Logger     *logrus.Logger
-	downloader downloader
+	Downloader downloader
 }
 
-// RequestContext wraps Application and provides extra per-request info
-// In a larger app we'd keep user identity etc here
-type RequestContext struct {
-	*Application
-	Err error
+// Application runs everything
+type Application struct {
+	*Config
 }
 
-// checks for any errors and handles them appropriately.
-func (c *RequestContext) handleErrors(w http.ResponseWriter, r *http.Request) {
-	if c.Err == nil {
-		return
-	}
-	if c.Err == store.ErrMovieNotFound {
-		http.NotFound(w, r)
-	} else if verrors, ok := c.Err.(govalidator.Errors); ok {
-		// validation fail
-		c.Render.JSON(w, http.StatusBadRequest, verrors)
-	} else {
-		c.Logger.Error(c.Err)
-		http.Error(w, "An error has occurred", http.StatusInternalServerError)
-	}
+// Run runs the app
+func (app *Application) Run() error {
 
-}
+	r := gin.Default()
+	r.LoadHTMLGlob("templates/*")
 
-func getRequestContext(ctx context.Context) *RequestContext {
-	return ctx.Value(requestContextKey).(*RequestContext)
-}
+	// inject Config into context
 
-// NewRequestContext creates a new request context
-func (app *Application) NewRequestContext(ctx context.Context) (context.Context, *RequestContext) {
-	reqctx := &RequestContext{Application: app}
-	ctx = context.WithValue(ctx, requestContextKey, reqctx)
-	return ctx, reqctx
-}
-
-// Router creates http handler
-func (app *Application) Router() http.Handler {
-
-	router := goji.NewMux()
-
-	// static paths
-	router.Handle(
-		pat.Get(app.Options.StaticURL+"*"),
-		http.StripPrefix(app.Options.StaticURL,
-			http.FileServer(http.Dir(app.Options.StaticDir))))
-
-	api := goji.SubMux()
-
-	api.HandleFuncC(pat.Get("/all/"), getMovies)
-	api.HandleFuncC(pat.Get("/"), getRandomMovie)
-	api.HandleFuncC(pat.Post("/"), addMovie)
-	api.HandleFuncC(pat.Get("/suggest"), suggest)
-	api.HandleFuncC(pat.Get("/movie/:id"), getMovie)
-	api.HandleFuncC(pat.Delete("/movie/:id"), deleteMovie)
-	api.HandleFuncC(pat.Patch("/seen/:id"), markSeen)
-
-	router.HandleC(pat.New("/api/*"), api)
-
-	router.HandleFuncC(pat.Get("/*"), indexPage)
-
-	// inject Application
-	router.UseC(func(h goji.Handler) goji.Handler {
-		return goji.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-			// append request context
-			ctx, reqctx := app.NewRequestContext(ctx)
-			h.ServeHTTPC(ctx, w, r)
-			reqctx.handleErrors(w, r)
-		})
+	r.Use(func(c *gin.Context) {
+		c.Set("cfg", app.Config)
+		c.Next()
 	})
 
-	return router
+	// CSRF
+	r.Use(wraphh.WrapHH(nosurf.NewPure))
 
-}
+	r.Static(app.Options.StaticURL, app.Options.StaticDir)
 
-// Run the server instance at given port
-func (app *Application) Run() error {
-	n := negroni.New()
-	n.Use(negroni.NewRecovery())
-	n.Use(logrusmw.NewMiddlewareFromLogger(app.Logger, "web"))
-	n.UseHandler(nosurf.New(app.Router()))
-	n.Run(fmt.Sprintf(":%v", app.Options.Port))
+	r.GET("/", indexPage)
+
+	api := r.Group("/api")
+
+	api.GET("/all/", getMovies)
+	api.GET("/", getRandomMovie)
+	api.POST("/", addMovie)
+	api.GET("/suggest", suggest)
+	api.GET("/movie/:id", getMovie)
+	api.DELETE("/movie/:id", deleteMovie)
+	api.PATCH("/seen/:id", markSeen)
+
+	r.Run()
 	return nil
 }
 
-func indexPage(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func indexPage(c *gin.Context) {
 
-	c := getRequestContext(ctx)
+	cfg := getConfig(c)
 
 	var staticHost string
 
-	if c.Options.Env == "dev" {
-		staticHost = c.Options.DevServerURL
+	if cfg.Options.Env == "dev" {
+		staticHost = cfg.Options.DevServerURL
 	}
 
-	csrfToken := nosurf.Token(r)
+	csrfToken := nosurf.Token(c.Request)
 
-	data := map[string]string{
+	data := gin.H{
 		"staticHost": staticHost,
-		"env":        c.Options.Env,
+		"env":        cfg.Options.Env,
 		"csrfToken":  csrfToken,
 	}
-	log.Println("indexpage", c.Options)
-	c.Render.HTML(w, http.StatusOK, "index", data)
+	c.HTML(http.StatusOK, "index.tmpl", data)
 }
 
-func getMovies(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	c := getRequestContext(ctx)
-	movies, err := c.Store.GetAll()
+func getMovies(c *gin.Context) {
+	cfg := getConfig(c)
+
+	movies, err := cfg.Store.GetAll()
 	if err != nil {
-		c.Err = err
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	c.Render.JSON(w, http.StatusOK, movies)
+	c.JSON(http.StatusOK, movies)
 }
 
-func markSeen(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func markSeen(c *gin.Context) {
 
-	c := getRequestContext(ctx)
+	cfg := getConfig(c)
 
-	if err := c.Store.MarkSeen(pat.Param(ctx, "id")); err != nil {
-		c.Err = err
+	if err := cfg.Store.MarkSeen(c.Param("id")); err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	c.Render.Text(w, http.StatusOK, "Movie seen")
+	c.String(http.StatusOK, "Movie seen")
 }
 
-func getRandomMovie(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func getRandomMovie(c *gin.Context) {
 
-	c := getRequestContext(ctx)
+	cfg := getConfig(c)
 
-	movie, err := c.Store.GetRandom()
+	movie, err := cfg.Store.GetRandom()
 
 	if err != nil {
-		c.Err = err
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	c.Render.JSON(w, http.StatusOK, movie)
+	c.JSON(http.StatusOK, movie)
 }
 
-func suggest(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func suggest(c *gin.Context) {
 
-	c := getRequestContext(ctx)
+	cfg := getConfig(c)
 
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		c.Err = err
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
 	for {
 
-		movie, err := c.Store.GetRandom()
+		movie, err := cfg.Store.GetRandom()
 
 		if err != nil {
-			c.Logger.Error(err)
 			continue
 		}
 
 		if err := conn.WriteJSON(movie); err != nil {
-			c.Err = err
+			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -247,79 +179,78 @@ func suggest(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getMovie(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	c := getRequestContext(ctx)
-	movie, err := c.Store.Get(pat.Param(ctx, "id"))
+func getMovie(c *gin.Context) {
+	cfg := getConfig(c)
+	movie, err := cfg.Store.Get(c.Param("id"))
 	if err != nil {
-		c.Err = err
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	c.Render.JSON(w, http.StatusOK, movie)
+	c.JSON(http.StatusOK, movie)
 }
 
-func deleteMovie(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	c := getRequestContext(ctx)
-	if err := c.Store.Delete(pat.Param(ctx, "id")); err != nil {
-		c.Err = err
+func deleteMovie(c *gin.Context) {
+	cfg := getConfig(c)
+	if err := cfg.Store.Delete(c.Param("id")); err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	c.Render.Text(w, http.StatusOK, "Movie deleted")
+	c.String(http.StatusOK, "Movie deleted")
 }
 
-func addMovie(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func addMovie(c *gin.Context) {
 
-	c := getRequestContext(ctx)
+	cfg := getConfig(c)
 
 	d := &struct {
 		Title string `valid:"required"`
 	}{}
-	if err := decode(r, d); err != nil {
-		c.Err = err
+	if err := c.Bind(d); err != nil {
 		return
 	}
 
-	movie, err := c.OMDB.Find(d.Title)
+	movie, err := cfg.OMDB.Find(d.Title)
 
 	if err != nil {
-		c.Err = err
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	oldMovie, err := c.Store.Get(movie.ImdbID)
+	oldMovie, err := cfg.Store.Get(movie.ImdbID)
 
 	if err == store.ErrMovieNotFound {
 
 		if movie.Poster != "" {
 			go func(url, imdbID string) {
-				if filename, err := c.downloader.download(
-					c.Options.StaticDir, url, imdbID); err != nil {
-					c.Logger.Error(err)
+				if filename, err := cfg.Downloader.download(
+					cfg.Options.StaticDir, url, imdbID); err != nil {
 					movie.Poster = ""
 				} else {
 					movie.Poster = filename
 				}
-				if err := c.Store.Save(movie); err != nil {
-					c.Logger.Error(err)
+				if err := cfg.Store.Save(movie); err != nil {
+					c.AbortWithError(http.StatusInternalServerError, err)
+					return
 				}
 			}(movie.Poster, movie.ImdbID)
 		}
 
 		movie.Poster = "" // so we don't get a bad link
 
-		if err := c.Store.Save(movie); err != nil {
-			c.Err = err
+		if err := cfg.Store.Save(movie); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 
-		c.Render.JSON(w, http.StatusCreated, movie)
+		c.JSON(http.StatusCreated, movie)
 		return
 	}
 
 	if err != nil {
-		c.Err = err
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	c.Render.JSON(w, http.StatusOK, oldMovie)
+	c.JSON(http.StatusOK, oldMovie)
 
 }

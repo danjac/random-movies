@@ -2,5 +2,8 @@
 # to setup $GOPATH properly for gb
 # source this file
 
+alias gb=$HOME/go/bin/gb
+
+export PORT=4000
 export PROJECT_DIR=`realpath .`
 export GOPATH=$GOPATH:$PROJECT_DIR:$PROJECT_DIR/vendor
